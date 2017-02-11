@@ -176,12 +176,12 @@ function getPlayerCoord(playerIndex)
         print("getPlayerCoord server")
         local otherPlayer = Player(playerIndex)
         if (otherPlayer) then
-            local shipName = otherPlayer:getShipNames()
-            print("getPlayerCoord ship ", shipName)
-            if (shipName) then
-                local x, y = otherPlayer:getShipPosition(shipName)
+            local ship = Entity(otherPlayer.craftIndex)
+            print("getPlayerCoord ship ", ship.name)
+            if (ship and ship.name) then
+                local x, y = otherPlayer:getShipPosition(ship.name)
                 print("on server in x ", x, " y ", y)
-                invokeClientFunction(Player(callingPlayer), showPlayerOnMap, x, y)
+                invokeClientFunction(Player(callingPlayer), "showPlayerOnMap", x, y)
             end
             return 
         end
