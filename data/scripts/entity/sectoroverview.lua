@@ -181,7 +181,7 @@ function getPlayerCoord(playerIndex)
             if (shipName) then
                 local x, y = otherPlayer:getShipPosition(shipName)
                 print("on server in x ", x, " y ", y)
-                invokeClientFunction(Player(callingPlayer), x, y)
+                invokeClientFunction(Player(callingPlayer), showPlayerOnMap, x, y)
             end
             return 
         end
