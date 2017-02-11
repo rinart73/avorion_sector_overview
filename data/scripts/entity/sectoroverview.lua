@@ -5,9 +5,12 @@ require("stringutility")
 
 
 local entityList = nil
+local gateList = nil
+local tabMap = {}
 local entities = {}
 local isWindowShowing = false
 local window = nil
+local tabbedWindow = nil
 
 function getIcon()
     return "data/textures/icons/computer.png"
@@ -36,28 +39,42 @@ function initUI()
     window.moveable = 1
 
     -- create a tabbed window inside the main window
-    local tabbedWindow = window:createTabbedWindow(Rect(vec2(10, 10), size - 10))
+    tabbedWindow = window:createTabbedWindow(Rect(vec2(10, 10), size - 10))
 
+    -- stations
     local buildTab = tabbedWindow:createTab("Build"%_t, "data/textures/icons/rss.png", "Station List"%_t)
-
     local hsplit = UIHorizontalSplitter(Rect(vec2(0, 0), tabbedWindow.size ), 10, 0, 0.5)
     hsplit.bottomSize = 40
-
     entityList = buildTab:createListBox(hsplit.top)
+    tabMap[buildTab.index] = entityList
 
+    -- ship
+    local buildTab = tabbedWindow:createTab("Build"%_t, "data/textures/icons/vortex.png", "Gate List"%_t)
+    local hsplit = UIHorizontalSplitter(Rect(vec2(0, 0), tabbedWindow.size ), 10, 0, 0.5)
+    hsplit.bottomSize = 40
+    gateList = buildTab:createListBox(hsplit.top)
+    tabMap[buildTab.index] = gateList
 end
 
 function onShowWindow()
     entities = {}
     entityList:clear()
+    gateList:clear()
 
     local player = Player()
-    for index, entity in pairs({Sector():getEntitiesByType(EntityType.Station)}) do
+    for index, entity in pairs({Sector():getEntities()}) do
+      if (entity.type == EntityType.Station) then
         local titleArgs = entity:getTitleArguments()
-	local title =  entity.title % titleArgs
-    	local entryName = title .. "    " .. entity.name 
-	entityList:addEntry(entryName)
-	entities[entryName] = entity
+        local title =  entity.title % titleArgs
+        local entryName = title .. "    " .. entity.name 
+        entityList:addEntry(entryName)
+        entities[entryName] = entity
+      end
+      if (entity.title and string.match(entity.title, "Gate"))then
+        local entryName = entity.title 
+        gateList:addEntry(entryName)
+        entities[entryName] = entity
+      end
     end
     isWindowShowing = true
 end
@@ -71,7 +88,8 @@ function updateUI()
     return end
 
   if Mouse():mouseDown(1) then
-    local selectedEntry = entityList:getSelectedEntry()
+    local tabIndex = tabbedWindow:getActiveTab().index
+    local selectedEntry = tabMap[tabIndex]:getSelectedEntry()
     if (selectedEntry) then
       local entityToTarget = entities[selectedEntry];
       if (entityToTarget) then
