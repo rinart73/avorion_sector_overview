@@ -13,6 +13,8 @@ local playerAddedList = {}
 local isWindowShowing = false
 local window = nil
 local tabbedWindow = nil
+local playerTabIndex = nil
+local playerIndexMap = {}
 
 function getIcon()
     return "data/textures/icons/computer.png"
@@ -63,6 +65,7 @@ function initUI()
     hsplit.bottomSize = 70 
     playerList = buildTab:createListBox(hsplit.top)
     tabMap[buildTab.index] = playerList 
+    playerTabIndex = buildTab.index
 
     local hsplit = UIHorizontalSplitter(hsplit.bottom, 10, 0, 0.5)
     hsplit.bottomSize = 35
@@ -145,9 +148,11 @@ function onShowWindow()
 
     -- fill player combo box
     for index, name in pairs(Galaxy():getPlayerNames()) do
+        print("FOR index ", index, " name ", name )
         if player.name:lower() ~= name:lower() then
             playerCombo:addEntry(name);
-            tabMap[name] = index
+            print("WHAT ", name, " index ", index)
+            playerIndexMap[name] = index
         end
     end
 
@@ -165,6 +170,28 @@ end
 function onCloseWindow()
     isWindowShowing = false
 end
+function getPlayerCoord(playerIndex)
+    print("getPlayerCoord")
+    if onServer() then
+        print("getPlayerCoord server")
+        local otherPlayer = Player(playerIndex)
+        if (otherPlayer) then
+            local shipName = otherPlayer:getShipNames()
+            print("getPlayerCoord ship ", shipName)
+            if (shipName) then
+                local x, y = otherPlayer:getShipPosition(shipName)
+                print("on server in x ", x, " y ", y)
+                invokeClientFunction(Player(callingPlayer), x, y)
+            end
+            return 
+        end
+    end
+end
+
+function showPlayerOnMap(x, y)
+    print("Got coord x ", x, " y ", y)
+    GalaxyMap():show(x, y)
+end
 
 function updateUI()
     if not isWindowShowing then
@@ -174,6 +201,13 @@ function updateUI()
         local tabIndex = tabbedWindow:getActiveTab().index
         local selectedEntry = tabMap[tabIndex]:getSelectedEntry()
         if (selectedEntry) then
+            if (tabIndex == playerTabIndex) then
+                print("tabindex", selectedEntry)
+                local playerIndex = playerIndexMap[selectedEntry]
+                invokeServerFunction("getPlayerCoord", playerIndex)
+                return
+            end
+
             local entityToTarget = entities[selectedEntry];
             if (entityToTarget) then
                 Player().selectedObject = entityToTarget
