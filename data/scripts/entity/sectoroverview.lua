@@ -158,12 +158,6 @@ function onShowWindow()
 
     refreshPlayerList()
 
-    -- local name = "test"
-    -- for i=1,10  do
-    --     print (name .. i)
-    --     playerCombo:addEntry(name .. i);
-    --     tabMap[name] = i + 10
-    -- end
     isWindowShowing = true
 end
 
@@ -171,16 +165,16 @@ function onCloseWindow()
     isWindowShowing = false
 end
 function getPlayerCoord(playerIndex)
-    print("getPlayerCoord")
+    print("getPlayerCoord index", playerIndex )
     if onServer() then
         print("getPlayerCoord server")
         local otherPlayer = Player(playerIndex)
         if (otherPlayer) then
-            print("getPlayerCoord ship ", otherPlayer.craftIndex)
-            local ship = Entity(otherPlayer.craftIndex)
-            if (ship and ship.name) then
-                print("getPlayerCoord ship ", ship.name)
-                local x, y = otherPlayer:getShipPosition(ship.name)
+            print("getPlayerCoord ship index ", otherPlayer.craftIndex)
+            local ship = otherPlayer:getShipNames() 
+            if (ship) then
+                print("getPlayerCoord ship ", ship)
+                local x, y = otherPlayer:getShipPosition(ship)
                 print("on server in x ", x, " y ", y)
                 invokeClientFunction(Player(callingPlayer), "showPlayerOnMap", x, y)
             end
@@ -205,6 +199,7 @@ function updateUI()
             if (tabIndex == playerTabIndex) then
                 print("tabindex", selectedEntry)
                 local playerIndex = playerIndexMap[selectedEntry]
+                print ("tabindex player index ", playerIndex)
                 invokeServerFunction("getPlayerCoord", playerIndex)
                 return
             end
