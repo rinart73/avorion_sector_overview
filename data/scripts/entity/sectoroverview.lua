@@ -170,10 +170,26 @@ function getPlayerCoord(playerIndex)
         print("getPlayerCoord server")
         local otherPlayer = Player(playerIndex)
         if (otherPlayer) then
+            if (otherPlayer.craft)
+	 then
+		print("WHAT")
+		local craft = otherPlayer.craft
+		if (craft.name) then print ("WUT ", craft.name) 
+	              local x, y = otherPlayer:getShipPosition(craft.name)	
+		      print("OUIII x ", x , "  y ", y) 
+		
+		end
+		end
             print("getPlayerCoord ship index ", otherPlayer.craftIndex)
-            local ship = otherPlayer:getShipNames() 
+            local ship, ship2 = otherPlayer:getShipNames() 
+	    
             local entity = Entity(otherPlayer.craftIndex)
-            print ("entity ", entity.name)
+	    if (entity) then
+		    print("ENTITY ", entity.title, " name ", entity.name)
+	    end
+	    if (ship2) then
+		    print("LOOL", ship2)
+	    end
             if (ship) then
                 print("getPlayerCoord ship ", ship)
                 local x, y = otherPlayer:getShipPosition(ship)
