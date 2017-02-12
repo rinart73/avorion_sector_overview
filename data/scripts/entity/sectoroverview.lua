@@ -165,44 +165,36 @@ function onCloseWindow()
     isWindowShowing = false
 end
 function getPlayerCoord(playerIndex)
-    print("getPlayerCoord index", playerIndex )
+
     if onServer() then
-        print("getPlayerCoord server")
+        local errorMsg = "Can't get coordinate, "
         local otherPlayer = Player(playerIndex)
         if (otherPlayer) then
-            if (otherPlayer.craft)
-	 then
-		print("WHAT")
-		local craft = otherPlayer.craft
-		if (craft.name) then print ("WUT ", craft.name) 
-	              local x, y = otherPlayer:getShipPosition(craft.name)	
-		      print("OUIII x ", x , "  y ", y) 
-		
-		end
-		end
-            print("getPlayerCoord ship index ", otherPlayer.craftIndex)
-            local ship, ship2 = otherPlayer:getShipNames() 
-	    
-            local entity = Entity(otherPlayer.craftIndex)
-	    if (entity) then
-		    print("ENTITY ", entity.title, " name ", entity.name)
-	    end
-	    if (ship2) then
-		    print("LOOL", ship2)
-	    end
-            if (ship) then
-                print("getPlayerCoord ship ", ship)
-                local x, y = otherPlayer:getShipPosition(ship)
-                print("on server in x ", x, " y ", y)
-                invokeClientFunction(Player(callingPlayer), "showPlayerOnMap", x, y)
+            if (otherPlayer.craft) then
+                local craft = otherPlayer.craft
+                if (craft.name) then
+                    -- couldn' t find a way to identify if a player is in a Drone
+                    local droneName = otherPlayer.name .. "'s Drone"
+                    if craft.name == droneName then
+                        local msg = errorMsg .. otherPlayer.name .. " is in a Drone"
+                        otherPlayer:sendChatMessage("Navigation"%_t, 1, msg)
+                    else
+                        local x, y = otherPlayer:getShipPosition(craft.name
+                        invokeClientFunction(Player(callingPlayer), "showPlayerOnMap", x, y)
+                    end
+                end
+            else
+                local msg = errorMsg .. otherPlayer.name .. " is probably offline"
+                otherPlayer:sendChatMessage("Navigation"%_t, 1, msg)
             end
-            return 
+        else
+            local msg = errorMsg .. otherPlayer.name .. " doesn't exist ?"
+            otherPlayer:sendChatMessage("Navigation"%_t, 1, msg)
         end
     end
 end
 
 function showPlayerOnMap(x, y)
-    print("Got coord x ", x, " y ", y)
     GalaxyMap():show(x, y)
 end
 
@@ -215,13 +207,10 @@ function updateUI()
         local selectedEntry = tabMap[tabIndex]:getSelectedEntry()
         if (selectedEntry) then
             if (tabIndex == playerTabIndex) then
-                print("tabindex", selectedEntry)
                 local playerIndex = playerIndexMap[selectedEntry]
-                print ("tabindex player index ", playerIndex)
                 invokeServerFunction("getPlayerCoord", playerIndex)
                 return
             end
-
             local entityToTarget = entities[selectedEntry];
             if (entityToTarget) then
                 Player().selectedObject = entityToTarget
