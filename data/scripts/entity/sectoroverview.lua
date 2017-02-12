@@ -101,13 +101,15 @@ function refreshPlayerList()
 
     table.sort(playerSortedList)
     for _, name in ipairs(playerSortedList) do
+        print("WHAT entry ", name)
         playerList:addEntry(name)
     end
 end
 
 function onAddPlayerToGroupPressed()
     local name = playerCombo.selectedEntry
-    if (not playerAddedList[name]) then
+    print("WHAT NAME", name)
+    if (name ~= "" and not playerAddedList[name]) then
         playerList:addEntry(name)
         playerAddedList[name] = true
         refreshPlayerList()
@@ -179,7 +181,7 @@ function getPlayerCoord(playerIndex)
                         local msg = errorMsg .. otherPlayer.name .. " is in a Drone"
                         otherPlayer:sendChatMessage("Navigation"%_t, 1, msg)
                     else
-                        local x, y = otherPlayer:getShipPosition(craft.name
+                        local x, y = otherPlayer:getShipPosition(craft.name)
                         invokeClientFunction(Player(callingPlayer), "showPlayerOnMap", x, y)
                     end
                 end
