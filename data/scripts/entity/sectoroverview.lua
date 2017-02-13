@@ -120,7 +120,7 @@ function onRemovePlayerFromGroupPressed()
     end
 end
 
-function onShowPlayer()
+function onShowPlayerPressed()
     local tabIndex = tabbedWindow:getActiveTab().index
     local selectedEntry = tabMap[tabIndex]:getSelectedEntry()
     if (selectedEntry) then
