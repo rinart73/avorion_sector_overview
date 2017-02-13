@@ -120,7 +120,7 @@ function onRemovePlayerFromGroupPressed()
     end
 end
 
-function onShowPlayer
+function onShowPlayer()
     local tabIndex = tabbedWindow:getActiveTab().index
     local selectedEntry = tabMap[tabIndex]:getSelectedEntry()
     if (selectedEntry) then
@@ -128,6 +128,7 @@ function onShowPlayer
         invokeServerFunction("getPlayerCoord", playerIndex)
     end
 end
+
 function onShowWindow()
     entities = {}
     stationList:clear()
