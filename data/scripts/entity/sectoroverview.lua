@@ -61,7 +61,9 @@ function initUI()
 
     -- Players
     local buildTab = tabbedWindow:createTab("Build"%_t, "data/textures/icons/backup.png", "Player List"%_t)
-    local hsplit = UIHorizontalSplitter(Rect(vec2(0, 0), tabbedWindow.size - vec2(0, 55) ), 10, 0, 0.5)
+    local showButton = buildTab:createButton(Rect(0, 0, tabbedWindow.width, 40), "Show on Galaxy"%_t, "onShowPlayerPressed")
+
+    local hsplit = UIHorizontalSplitter(Rect(vec2(0, 50), tabbedWindow.size - vec2(0, 55) ), 10, 0, 0.5)
     hsplit.bottomSize = 70 
     playerList = buildTab:createListBox(hsplit.top)
     tabMap[buildTab.index] = playerList 
@@ -76,17 +78,11 @@ function initUI()
 
     addScriptButton = buildTab:createButton(vsplit.left, "Add"%_t, "onAddPlayerToGroupPressed")
     addScriptButton.tooltip = 
-        [[ Add the selected player from the combo box to the list of players"]]
+        [[ Add the selected player from the combo box to the list of players]]
     removeScriptButton = buildTab:createButton(vsplit.right, "Remove"%_t, "onRemovePlayerFromGroupPressed")
     removeScriptButton.tooltip =
-        [[ "Remove the selected player from the list of players."]]
+        [[ Remove the selected player from the list of players.]]
 
-    local player = Player()
-    print ("INIT PLAYER INFO craft : ", player.craftIndex,
-           ", numShips :", player.numShips,
-           "shipname :", player:getShipNames(),
-           "ship pos2 : ",  "END")
-    local x, y = player:getShipPosition(player:getShipNames())
 end
 
 function refreshPlayerList()
@@ -124,6 +120,14 @@ function onRemovePlayerFromGroupPressed()
     end
 end
 
+function onShowPlayer
+    local tabIndex = tabbedWindow:getActiveTab().index
+    local selectedEntry = tabMap[tabIndex]:getSelectedEntry()
+    if (selectedEntry) then
+        local playerIndex = playerIndexMap[selectedEntry]
+        invokeServerFunction("getPlayerCoord", playerIndex)
+    end
+end
 function onShowWindow()
     entities = {}
     stationList:clear()
