@@ -122,9 +122,12 @@ end
 
 function onShowPlayerPressed()
     local tabIndex = tabbedWindow:getActiveTab().index
+    print("Tab index ", tabIndex)
     local selectedEntry = tabMap[tabIndex]:getSelectedEntry()
+    print("onShowPlayerPressed ", selectedEntry)
     if (selectedEntry) then
         local playerIndex = playerIndexMap[selectedEntry]
+        print("test ", playerIndex)
         invokeServerFunction("getPlayerCoord", playerIndex)
     end
 end
@@ -175,6 +178,7 @@ function getPlayerCoord(playerIndex)
 
     if onServer() then
         local errorMsg = "Can't get coordinate, "
+        local currentPlayer = Player(callingPlayer)
         local otherPlayer = Player(playerIndex)
         if (otherPlayer) then
             if (otherPlayer.craft) then
@@ -182,21 +186,25 @@ function getPlayerCoord(playerIndex)
                 if (craft.name) then
                     -- couldn' t find a way to identify if a player is in a Drone
                     local droneName = otherPlayer.name .. "'s Drone"
+
                     if craft.name == droneName then
                         local msg = errorMsg .. otherPlayer.name .. " is in a Drone"
-                        otherPlayer:sendChatMessage("Navigation"%_t, 1, msg)
+                        currentPlayer:sendChatMessage("Navigation"%_t, 1, msg)
                     else
                         local x, y = otherPlayer:getShipPosition(craft.name)
                         invokeClientFunction(Player(callingPlayer), "showPlayerOnMap", x, y)
                     end
+                else
+                    local msg = errorMsg .. otherPlayer.name .. " is not in a ship !"
+                    currentPlayer:sendChatMessage("Navigation"%_t, 1, msg)
                 end
             else
                 local msg = errorMsg .. otherPlayer.name .. " is probably offline"
-                otherPlayer:sendChatMessage("Navigation"%_t, 1, msg)
+                currentPlayer:sendChatMessage("Navigation"%_t, 1, msg)
             end
         else
             local msg = errorMsg .. otherPlayer.name .. " doesn't exist ?"
-            otherPlayer:sendChatMessage("Navigation"%_t, 1, msg)
+            currentPlayer:sendChatMessage("Navigation"%_t, 1, msg)
         end
     end
 end
@@ -214,8 +222,6 @@ function updateUI()
         local selectedEntry = tabMap[tabIndex]:getSelectedEntry()
         if (selectedEntry) then
             if (tabIndex == playerTabIndex) then
-                local playerIndex = playerIndexMap[selectedEntry]
-                invokeServerFunction("getPlayerCoord", playerIndex)
                 return
             end
             local entityToTarget = entities[selectedEntry];
