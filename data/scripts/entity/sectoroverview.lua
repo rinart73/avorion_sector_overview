@@ -97,14 +97,12 @@ function refreshPlayerList()
 
     table.sort(playerSortedList)
     for _, name in ipairs(playerSortedList) do
-        print("WHAT entry ", name)
         playerList:addEntry(name)
     end
 end
 
 function onAddPlayerToGroupPressed()
     local name = playerCombo.selectedEntry
-    print("WHAT NAME", name)
     if (name ~= "" and not playerAddedList[name]) then
         playerList:addEntry(name)
         playerAddedList[name] = true
@@ -122,12 +120,9 @@ end
 
 function onShowPlayerPressed()
     local tabIndex = tabbedWindow:getActiveTab().index
-    print("Tab index ", tabIndex)
     local selectedEntry = tabMap[tabIndex]:getSelectedEntry()
-    print("onShowPlayerPressed ", selectedEntry)
     if (selectedEntry) then
         local playerIndex = playerIndexMap[selectedEntry]
-        print("test ", playerIndex)
         invokeServerFunction("getPlayerCoord", playerIndex)
     end
 end
@@ -158,10 +153,8 @@ function onShowWindow()
 
     -- fill player combo box
     for index, name in pairs(Galaxy():getPlayerNames()) do
-        print("FOR index ", index, " name ", name )
         if player.name:lower() ~= name:lower() then
             playerCombo:addEntry(name);
-            print("WHAT ", name, " index ", index)
             playerIndexMap[name] = index
         end
     end
@@ -174,10 +167,10 @@ end
 function onCloseWindow()
     isWindowShowing = false
 end
-function getPlayerCoord(playerIndex)
 
+function getPlayerCoord(playerIndex)
     if onServer() then
-        local errorMsg = "Can't get coordinate, "
+        local errorMsg = "Can't get coordinate, " .. otherPlayer.name
         local currentPlayer = Player(callingPlayer)
         local otherPlayer = Player(playerIndex)
         if (otherPlayer) then
@@ -186,24 +179,23 @@ function getPlayerCoord(playerIndex)
                 if (craft.name) then
                     -- couldn' t find a way to identify if a player is in a Drone
                     local droneName = otherPlayer.name .. "'s Drone"
-
                     if craft.name == droneName then
-                        local msg = errorMsg .. otherPlayer.name .. " is in a Drone"
+                        local msg = errorMsg .. " is in a Drone"
                         currentPlayer:sendChatMessage("Navigation"%_t, 1, msg)
                     else
                         local x, y = otherPlayer:getShipPosition(craft.name)
                         invokeClientFunction(Player(callingPlayer), "showPlayerOnMap", x, y)
                     end
                 else
-                    local msg = errorMsg .. otherPlayer.name .. " is not in a ship !"
+                    local msg = errorMsg .. " is not in a ship !"
                     currentPlayer:sendChatMessage("Navigation"%_t, 1, msg)
                 end
             else
-                local msg = errorMsg .. otherPlayer.name .. " is probably offline"
+                local msg = errorMsg .. " is probably offline"
                 currentPlayer:sendChatMessage("Navigation"%_t, 1, msg)
             end
         else
-            local msg = errorMsg .. otherPlayer.name .. " doesn't exist ?"
+            local msg = errorMsg .. " doesn't exist ?"
             currentPlayer:sendChatMessage("Navigation"%_t, 1, msg)
         end
     end
