@@ -62,6 +62,7 @@ function initUI()
     -- Players
     local buildTab = tabbedWindow:createTab("Build"%_t, "data/textures/icons/backup.png", "Player List"%_t)
     local showButton = buildTab:createButton(Rect(0, 0, tabbedWindow.width, 40), "Show on Galaxy"%_t, "onShowPlayerPressed")
+    showButton.tooltip = [[Show the selected player on the galaxy map.]]
 
     local hsplit = UIHorizontalSplitter(Rect(vec2(0, 50), tabbedWindow.size - vec2(0, 55) ), 10, 0, 0.5)
     hsplit.bottomSize = 70 
@@ -78,10 +79,10 @@ function initUI()
 
     addScriptButton = buildTab:createButton(vsplit.left, "Add"%_t, "onAddPlayerToGroupPressed")
     addScriptButton.tooltip = 
-        [[ Add the selected player from the combo box to the list of players]]
+        [[Add the selected player from the combo box to the list of players.]]
     removeScriptButton = buildTab:createButton(vsplit.right, "Remove"%_t, "onRemovePlayerFromGroupPressed")
     removeScriptButton.tooltip =
-        [[ Remove the selected player from the list of players.]]
+        [[Remove the selected player from the list of players.]]
 
 end
 
