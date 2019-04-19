@@ -188,33 +188,33 @@ function SectorOverview.onShowWindow()
     entities = {}
     stationList:clear()
     gateList:clear()
-    
+
+    -- fill list for station and gates
+    local player = Player()
+    for index, entity in pairs({Sector():getEntities()}) do
+        if (entity.type == EntityType.Station) then
+            local entryName
+            if entity.translatedTitle then
+                entryName = entity.translatedTitle .. "    " .. entity.name
+            else
+                local titleArgs = entity:getTitleArguments()
+                local title =  entity.title % titleArgs
+                entryName = title .. "    " .. entity.name
+            end
+            stationList:addEntry(entryName)
+            entities[entryName] = entity
+        end
+        if (entity.type == 0 and entity:hasScript("data/scripts/entity/gate.lua")) then
+            local entryName = entity.title 
+            gateList:addEntry(entryName)
+            entities[entryName] = entity
+        end
+    end
+
     if config.AllowPlayerCoordinates then
         playerList:clear()
         playerCombo:clear()
-
-        -- fill list for station and gates
-        local player = Player()
-        for index, entity in pairs({Sector():getEntities()}) do
-            if (entity.type == EntityType.Station) then
-                local entryName
-                if entity.translatedTitle then
-                    entryName = entity.translatedTitle .. "    " .. entity.name
-                else
-                    local titleArgs = entity:getTitleArguments()
-                    local title =  entity.title % titleArgs
-                    entryName = title .. "    " .. entity.name
-                end
-                stationList:addEntry(entryName)
-                entities[entryName] = entity
-            end
-            if (entity.type == 0 and entity:hasScript("data/scripts/entity/gate.lua")) then
-                local entryName = entity.title 
-                gateList:addEntry(entryName)
-                entities[entryName] = entity
-            end
-        end
-
+    
         -- fill player combo box
         for index, name in pairs(Galaxy():getPlayerNames()) do
             if player.name:lower() ~= name:lower() then
