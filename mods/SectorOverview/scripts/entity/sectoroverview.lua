@@ -1,4 +1,5 @@
 package.path = package.path .. ";data/scripts/lib/?.lua"
+package.path = package.path .. ";mods/ClientData/scripts/player/client/?.lua"
 require("utility")
 require("stringutility")
 
@@ -18,7 +19,6 @@ local stationList
 local gateList
 local playerList
 local tabMap = {}
-local playerTab
 local entities = {}
 local playerAddedList = {}
 local isWindowShowing = false
@@ -34,16 +34,10 @@ local playerSortedList
 if onClient() then -- CLIENT
 
 
-function SectorOverview.initialize()
-    invokeServerFunction("sendServerConfig")
-end
-
 function SectorOverview.getIcon()
     return "data/textures/icons/sector.png"
 end
 
--- if this function returns false, the script will not be listed in the interaction window,
--- even though its UI may be registered
 function SectorOverview.interactionPossible(playerIndex, option)
     local player = Player(playerIndex)
 
@@ -60,6 +54,12 @@ end
 
 -- create all required UI elements for the client side
 function SectorOverview.initUI()
+    local status, clientData = Player():invokeFunction("clientdata.lua", "getValue", "SectorOverview")
+    if not clientData then
+        Player():invokeFunction("clientdata.lua", "setValue", "SectorOverview", {})
+        invokeServerFunction("sendServerConfig")
+    end
+
     local res = getResolution()
     local size = vec2(config.WindowWidth, config.WindowHeight)
 
@@ -88,34 +88,32 @@ function SectorOverview.initUI()
     tabMap[buildTab.index] = gateList
 
     -- Players
-    if config.AllowPlayerCoordinates then
-        local buildTab = tabbedWindow:createTab("Player List", "data/textures/icons/crew.png", "Player List"%_t)
-        local showButton = buildTab:createButton(Rect(0, 0, tabbedWindow.width, 30), "Show on Galaxy Map"%_t, "onShowPlayerPressed")
-        showButton.maxTextSize = 14
-        showButton.tooltip = [[Show the selected player on the galaxy map.]]%_t
+    local buildTab = tabbedWindow:createTab("Player List", "data/textures/icons/crew.png", "Player List"%_t)
+    local showButton = buildTab:createButton(Rect(0, 0, tabbedWindow.width, 30), "Show on Galaxy Map"%_t, "onShowPlayerPressed")
+    showButton.maxTextSize = 14
+    showButton.tooltip = [[Show the selected player on the galaxy map.]]%_t
 
-        local hsplit = UIHorizontalSplitter(Rect(vec2(0, 40), tabbedWindow.size - vec2(0, 50) ), 10, 0, 0.5)
-        hsplit.bottomSize = 65
-        playerList = buildTab:createListBox(hsplit.top)
-        tabMap[buildTab.index] = playerList 
-        playerTabIndex = buildTab.index
+    local hsplit = UIHorizontalSplitter(Rect(vec2(0, 40), tabbedWindow.size - vec2(0, 50) ), 10, 0, 0.5)
+    hsplit.bottomSize = 65
+    playerList = buildTab:createListBox(hsplit.top)
+    tabMap[buildTab.index] = playerList 
+    playerTabIndex = buildTab.index
 
-        local hsplit = UIHorizontalSplitter(hsplit.bottom, 10, 0, 0.5)
-        hsplit.bottomSize = 35
+    local hsplit = UIHorizontalSplitter(hsplit.bottom, 10, 0, 0.5)
+    hsplit.bottomSize = 35
 
-        playerCombo = buildTab:createComboBox(hsplit.top, "")
+    playerCombo = buildTab:createComboBox(hsplit.top, "")
 
-        local vsplit = UIVerticalSplitter(hsplit.bottom, 10, 0, 0.5)
+    local vsplit = UIVerticalSplitter(hsplit.bottom, 10, 0, 0.5)
 
-        addScriptButton = buildTab:createButton(vsplit.left, "Add"%_t, "onAddPlayerToGroupPressed")
-        addScriptButton.maxTextSize = 14
-        addScriptButton.tooltip = 
-            [[Add the selected player from the combo box to the list of tracked players.]]%_t
-        removeScriptButton = buildTab:createButton(vsplit.right, "Remove"%_t, "onRemovePlayerFromGroupPressed")
-        removeScriptButton.maxTextSize = 14
-        removeScriptButton.tooltip =
-            [[Remove the selected player from the list of tracked players.]]%_t
-    end
+    addScriptButton = buildTab:createButton(vsplit.left, "Add"%_t, "onAddPlayerToGroupPressed")
+    addScriptButton.maxTextSize = 14
+    addScriptButton.tooltip = 
+        [[Add the selected player from the combo box to the list of tracked players.]]%_t
+    removeScriptButton = buildTab:createButton(vsplit.right, "Remove"%_t, "onRemovePlayerFromGroupPressed")
+    removeScriptButton.maxTextSize = 14
+    removeScriptButton.tooltip =
+        [[Remove the selected player from the list of tracked players.]]%_t
 end
 
 function SectorOverview.refreshPlayerList(refreshCoordinates)
@@ -165,16 +163,7 @@ function SectorOverview.onRemovePlayerFromGroupPressed()
         if (playerAddedList[name]) then
             playerAddedList[name] = nil 
             SectorOverview.refreshPlayerList()
-            -- Pass playerlist to the other entities
-            local index = Entity().index
-            local entities = {Sector():getEntitiesByComponent(ComponentType.ShipAI)}
-            local entity
-            for i = 1, #entities do
-                entity = entities[i]
-                if not entity.aiOwned and (entity.isShip or entity.isStation or entity.isDrone) and entity.index ~= index then
-                    entity:invokeFunction("mods/SectorOverview/scripts/entity/sectoroverview.lua", "clientSyncEntities", playerAddedList, playerIndexMap, playerSortedList, playerCoords)
-                end
-            end
+            SectorOverview.saveClientData(playerAddedList, playerIndexMap, playerCoords, playerSortedList)
         end
     end
 end
@@ -194,6 +183,15 @@ function SectorOverview.onShowPlayerPressed()
 end
 
 function SectorOverview.onShowWindow()
+    local status, clientData = Player():invokeFunction("clientdata.lua", "getValue", "SectorOverview")
+    if status == 0 and clientData then
+        config.AllowPlayerCoordinates = clientData.AllowPlayerCoordinates
+        playerAddedList = clientData.playerAddedList or {}
+        playerIndexMap = clientData.playerIndexMap or {}
+        playerCoords = clientData.playerCoords or {}
+        playerSortedList = clientData.playerSortedList or {}
+    end
+
     entities = {}
     stationList:clear()
     gateList:clear()
@@ -206,8 +204,7 @@ function SectorOverview.onShowWindow()
             if entity.translatedTitle then
                 entryName = entity.translatedTitle .. "    " .. entity.name
             else
-                local titleArgs = entity:getTitleArguments()
-                local title =  entity.title % titleArgs
+                local title =  entity.title % entity:getTitleArguments()
                 entryName = title .. "    " .. entity.name
             end
             stationList:addEntry(entryName)
@@ -233,6 +230,8 @@ function SectorOverview.onShowWindow()
         end
 
         SectorOverview.refreshPlayerList(true)
+    else
+        tabbedWindow:deactivateTab(tabbedWindow:getTab("Player List"))
     end
 
     isWindowShowing = true
@@ -247,16 +246,7 @@ function SectorOverview.receivePlayerCoord(data)
         playerCoords[pIndex] = coord
     end
     SectorOverview.refreshPlayerList()
-    -- Pass playerlist to the other entities
-    local index = Entity().index
-    local entities = {Sector():getEntitiesByComponent(ComponentType.ShipAI)}
-    local entity
-    for i = 1, #entities do
-        entity = entities[i]
-        if not entity.aiOwned and (entity.isShip or entity.isStation or entity.isDrone) and entity.index ~= index then
-            entity:invokeFunction("mods/SectorOverview/scripts/entity/sectoroverview.lua", "clientSyncEntities", playerAddedList, playerIndexMap, playerSortedList, playerCoords)
-        end
-    end
+    SectorOverview.saveClientData(playerAddedList, playerIndexMap, playerCoords, playerSortedList)
 end
 
 function SectorOverview.updateUI()
@@ -280,17 +270,17 @@ end
 
 function SectorOverview.receiveServerConfig(serverConfig)
     config.AllowPlayerCoordinates = serverConfig.AllowPlayerCoordinates
-    if not config.AllowPlayerCoordinates and tabbedWindow then
-        tabbedWindow:deactivateTab(tabbedWindow:getTab("Player List"))
-    end
+    Player():invokeFunction("clientdata.lua", "setValue", "SectorOverview", { AllowPlayerCoordinates = serverConfig.AllowPlayerCoordinates })
 end
 
--- Sync data between entities
-function SectorOverview.clientSyncEntities(otherPlayerAddedList, otherPlayerIndexMap, otherPlayerSortedList, otherplayerCoords)
-    playerAddedList = otherPlayerAddedList
-    playerIndexMap = otherPlayerIndexMap
-    playerSortedList = otherPlayerSortedList
-    playerCoords = otherplayerCoords
+function SectorOverview.saveClientData(otherPlayerAddedList, otherPlayerIndexMap, otherPlayerCoords, otherPlayerSortedList)
+    local status, clientData = Player():invokeFunction("clientdata.lua", "getValue", "SectorOverview")
+    if status ~= 0 then return end
+    clientData.playerAddedList = otherPlayerAddedList
+    clientData.playerIndexMap = otherPlayerIndexMap
+    clientData.playerCoords = otherPlayerCoords
+    clientData.playerSortedList = otherPlayerSortedList
+    Player():invokeFunction("clientdata.lua", "setValue", "SectorOverview", clientData)
 end
 
 
