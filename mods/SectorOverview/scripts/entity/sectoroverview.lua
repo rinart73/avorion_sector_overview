@@ -165,7 +165,16 @@ function SectorOverview.onRemovePlayerFromGroupPressed()
         if (playerAddedList[name]) then
             playerAddedList[name] = nil 
             SectorOverview.refreshPlayerList()
-            entity:invokeFunction("mods/SectorOverview/scripts/entity/sectoroverview.lua", "clientSyncEntities", playerAddedList, playerIndexMap, playerSortedList, playerCoords)
+            -- Pass playerlist to the other entities
+            local index = Entity().index
+            local entities = {Sector():getEntitiesByComponent(ComponentType.ShipAI)}
+            local entity
+            for i = 1, #entities do
+                entity = entities[i]
+                if not entity.aiOwned and (entity.isShip or entity.isStation or entity.isDrone) and entity.index ~= index then
+                    entity:invokeFunction("mods/SectorOverview/scripts/entity/sectoroverview.lua", "clientSyncEntities", playerAddedList, playerIndexMap, playerSortedList, playerCoords)
+                end
+            end
         end
     end
 end
