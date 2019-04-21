@@ -2,6 +2,7 @@ package.path = package.path .. ";data/scripts/lib/?.lua"
 package.path = package.path .. ";mods/ClientData/scripts/player/client/?.lua"
 require("utility")
 require("stringutility")
+require("callable")
 
 if i18n then i18n.registerMod("SectorOverview") end
 
