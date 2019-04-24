@@ -1,0 +1,46 @@
+# ========== mods\SectorOverview\data\scripts\entity\sectoroverview.lua ==========
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Sector Overview"
+msgstr "Обзор сектора"
+
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Station List"
+msgstr "Список станций"
+
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Gate List"
+msgstr "Список врат"
+
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Player List"
+msgstr "Список игроков"
+
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Show on Galaxy Map"
+msgstr "Показать на карте"
+
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Add"
+msgstr "Добавить"
+
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Add the selected player from the combo box to the list of tracked players."
+msgstr "Добавить выбранного игрока из выпадающего меню в список отслеживаемых игроков."
+
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Remove the selected player from the list of tracked players."
+msgstr "брать выбранного игрока из списка отслеживаемых игроков."
+
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Server doesn't allow to track players."
+msgstr "Сервер не разрешает отслеживать игроков."
+
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Can't get coordinates, %s doesn't exist."
+msgstr "Не удается получить координаты, %s не существует."
+
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Show the selected player on the galaxy map."
+msgstr "Показать выбранного игрока на карте галактики."
+
+

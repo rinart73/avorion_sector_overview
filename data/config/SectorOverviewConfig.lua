@@ -2,9 +2,8 @@ local config = {}
 config.author = "Rinart73"
 config.credits = "shulrak" -- For developing the original version of the mod
 config.name = "Sector Overview"
-config.homepage = "https://www.avorion.net/forum/index.php?topic=5596"
 config.version = {
-    major = 0, minor = 5, patch = 0, -- 0.21.x
+    major = 1, minor = 0, patch = 0, -- 0.22
 }
 config.version.string = config.version.major..'.'..config.version.minor..'.'..config.version.patch
 
@@ -18,7 +17,7 @@ config.WindowHeight = 400
 -- SERVER SETTINGS --
 -- If false, server will not reveal player coordinates (useful for PvP servers)
 -- Default: true
-config.AllowPlayerCoordinates = true
+config.AllowPlayerTracking = true
 
 
 return config

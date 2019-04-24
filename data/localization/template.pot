@@ -1,0 +1,46 @@
+# ========== mods\SectorOverview\data\scripts\entity\sectoroverview.lua ==========
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Sector Overview"
+msgstr ""
+
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Station List"
+msgstr ""
+
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Gate List"
+msgstr ""
+
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Player List"
+msgstr ""
+
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Show on Galaxy Map"
+msgstr ""
+
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Add"
+msgstr ""
+
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Add the selected player from the combo box to the list of tracked players."
+msgstr ""
+
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Remove the selected player from the list of tracked players."
+msgstr ""
+
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Server doesn't allow to track players."
+msgstr ""
+
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Can't get coordinate, %s doesn't exist."
+msgstr ""
+
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Show the selected player on the galaxy map."
+msgstr ""
+
+
