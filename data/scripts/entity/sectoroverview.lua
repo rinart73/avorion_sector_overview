@@ -4,17 +4,22 @@ require("utility")
 require("stringutility")
 require("callable")
 
-local status, config = pcall(include, 'data/config/SectorOverviewConfig')
+local status, AzimuthConfig = pcall(include, 'azimuthlib-config')
 if not status then
-    eprint("[ERROR][SectorOverview]: Couldn't load config, using default settings")
-    config = { WindowWidth = 300, WindowHeight = 400, AllowPlayerTracking = true }
+    eprint("[ERROR][SectorOverview]: Couldn't load AzimuthLib module 'config': " ..  AzimuthConfig)
+    return
 end
+
 
 -- namespace SectorOverview
 SectorOverview = {}
 
 if onClient() then -- CLIENT
 
+local config, status = AzimuthConfig.loadConfig("SectorOverview", { _version = "1.1", WindowWidth = 300, WindowHeight = 400 })
+if status == 1 then -- create config file if doesn't exist
+    AzimuthConfig.saveConfig("SectorOverview", config)
+end
 
 local window, tabbedWindow, stationList, gateList, playerTab, playerList, playerCombo, entities, playerSortedList
 local listBoxes = {}
@@ -44,9 +49,9 @@ end
 
 function SectorOverview.initUI()
     -- check if server settings are loaded/requested, if not - request them
-    local _, clientData = Player():invokeFunction("sectoroverview.lua", "getValue", "config")
+    local _, clientData = Player():invokeFunction("azimuthlib-clientdata.lua", "getValue", "SectorOverview.config")
     if not clientData then
-        Player():invokeFunction("sectoroverview.lua", "setValue", "config", {})
+        Player():invokeFunction("azimuthlib-clientdata.lua", "setValue", "SectorOverview.config", {})
         invokeServerFunction("sendServerConfig")
     end
 
@@ -127,14 +132,14 @@ function SectorOverview.onShowWindow()
     end
     
     local player = Player()
-    local status, clientData = player:invokeFunction("sectoroverview.lua", "getValues")
-    if status == 0 and clientData then
-        config.AllowPlayerTracking = clientData.config and clientData.config.AllowPlayerTracking or false
-        if clientData.playerTracking then
-            playerAddedList = clientData.playerTracking.playerAddedList or {}
-            playerIndexMap = clientData.playerTracking.playerIndexMap or {}
-            playerCoords = clientData.playerTracking.playerCoords or {}
-            playerSortedList = clientData.playerTracking.playerSortedList or {}
+    local status, serverConfig, playerTracking = player:invokeFunction("azimuthlib-clientdata.lua", "getValuem", "SectorOverview.config", "SectorOverview.playerTracking")
+    if status == 0 and serverConfig then
+        config.AllowPlayerTracking = serverConfig.AllowPlayerTracking
+        if playerTracking then
+            playerAddedList = playerTracking.playerAddedList or {}
+            playerIndexMap = playerTracking.playerIndexMap or {}
+            playerCoords = playerTracking.playerCoords or {}
+            playerSortedList = playerTracking.playerSortedList or {}
         end
     end
     
@@ -158,7 +163,7 @@ end
 
 function SectorOverview.onCloseWindow()
     if not config.AllowPlayerTracking then return end
-    Player():invokeFunction("sectoroverview.lua", "setValue", "playerTracking", {
+    Player():invokeFunction("azimuthlib-clientdata.lua", "setValue", "SectorOverview.playerTracking", {
       playerAddedList = playerAddedList,
       playerIndexMap = playerIndexMap,
       playerCoords = playerCoords,
@@ -242,7 +247,7 @@ end
 
 function SectorOverview.receiveServerConfig(serverConfig) -- called by server
     config.AllowPlayerTracking = serverConfig.AllowPlayerTracking
-    Player():invokeFunction("sectoroverview.lua", "setValue", "config", { AllowPlayerTracking = serverConfig.AllowPlayerTracking })
+    Player():invokeFunction("azimuthlib-clientdata.lua", "setValue", "SectorOverview.config", { AllowPlayerTracking = serverConfig.AllowPlayerTracking })
 end
 
 function SectorOverview.receivePlayerCoord(data) -- called by server
@@ -255,6 +260,11 @@ end
 
 else -- SERVER
 
+
+local config, status = AzimuthConfig.loadConfig("SectorOverview", { _version = "1.1", AllowPlayerTracking = true })
+if status == 1 then -- create config file if doesn't exist
+    AzimuthConfig.saveConfig("SectorOverview", config)
+end
 
 function SectorOverview.sendServerConfig()
     invokeClientFunction(Player(callingPlayer), "receiveServerConfig", { AllowPlayerTracking = config.AllowPlayerTracking })
