@@ -16,13 +16,28 @@ SectorOverview = {}
 
 if onClient() then -- CLIENT
 
-local config, status = AzimuthBasic.loadConfig("SectorOverview", { _version = "1.1", WindowWidth = 300, WindowHeight = 400 })
+
+local configOptions = {
+  _version = {
+    comment = "Config version. Don't touch",
+    default = "1.1"
+  },
+  WindowWidth = {
+    comment = "UI window width",
+    default = 300,
+    min = 200,
+    max = 800
+  },
+  WindowHeight = {
+    comment = "UI window height",
+    default = 400,
+    min = 200,
+    max = 800
+  }
+}
+local config = AzimuthBasic.loadConfig("SectorOverview", configOptions)
 -- resave config file with comments/updates
-AzimuthBasic.saveConfig("SectorOverview", config, {
-  _version = "Config version. Don't touch",
-  WindowWidth = "Default: 300. UI window width",
-  WindowHeight = "Default: 400. UI window height"
-})
+AzimuthBasic.saveConfig("SectorOverview", config, configOptions)
 
 local window, tabbedWindow, stationList, gateList, playerTab, playerList, playerCombo, entities, playerSortedList
 local listBoxes = {}
@@ -264,12 +279,20 @@ end
 else -- SERVER
 
 
-local config, status = AzimuthBasic.loadConfig("SectorOverview", { _version = "1.1", AllowPlayerTracking = true })
+local configOptions = {
+  _version = {
+    comment = "Config version. Don't touch",
+    default = "1.1"
+  },
+  AllowPlayerTracking = {
+    comment = "If false, server will not reveal players coordinates (useful for PvP servers).",
+    default = true
+  }
+}
+local config = AzimuthBasic.loadConfig("SectorOverview", configOptions)
 -- resave config file with comments/updates
-AzimuthBasic.saveConfig("SectorOverview", config, {
-  _version = "Config version. Don't touch",
-  AllowPlayerTracking = "Default: true. If false, server will not reveal players coordinates (useful for PvP servers)."
-})
+AzimuthBasic.saveConfig("SectorOverview", config, configOptions)
+
 
 function SectorOverview.sendServerConfig()
     invokeClientFunction(Player(callingPlayer), "receiveServerConfig", { AllowPlayerTracking = config.AllowPlayerTracking })
