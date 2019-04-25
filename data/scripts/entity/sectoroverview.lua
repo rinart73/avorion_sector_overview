@@ -4,9 +4,9 @@ require("utility")
 require("stringutility")
 require("callable")
 
-local status, AzimuthConfig = pcall(include, 'azimuthlib-config')
+local status, AzimuthBasic = pcall(include, 'azimuthlib-basic')
 if not status then
-    eprint("[ERROR][SectorOverview]: Couldn't load AzimuthLib module 'config': " ..  AzimuthConfig)
+    eprint("[ERROR][SectorOverview]: Couldn't load AzimuthLib module 'basic': " ..  AzimuthBasic)
     return
 end
 
@@ -16,10 +16,13 @@ SectorOverview = {}
 
 if onClient() then -- CLIENT
 
-local config, status = AzimuthConfig.loadConfig("SectorOverview", { _version = "1.1", WindowWidth = 300, WindowHeight = 400 })
-if status == 1 then -- create config file if doesn't exist
-    AzimuthConfig.saveConfig("SectorOverview", config)
-end
+local config, status = AzimuthBasic.loadConfig("SectorOverview", { _version = "1.1", WindowWidth = 300, WindowHeight = 400 })
+-- resave config file with comments/updates
+AzimuthBasic.saveConfig("SectorOverview", config, {
+  _version = "Config version. Don't touch",
+  WindowWidth = "Default: 300. UI window width",
+  WindowHeight = "Default: 400. UI window height"
+})
 
 local window, tabbedWindow, stationList, gateList, playerTab, playerList, playerCombo, entities, playerSortedList
 local listBoxes = {}
@@ -261,10 +264,12 @@ end
 else -- SERVER
 
 
-local config, status = AzimuthConfig.loadConfig("SectorOverview", { _version = "1.1", AllowPlayerTracking = true })
-if status == 1 then -- create config file if doesn't exist
-    AzimuthConfig.saveConfig("SectorOverview", config)
-end
+local config, status = AzimuthBasic.loadConfig("SectorOverview", { _version = "1.1", AllowPlayerTracking = true })
+-- resave config file with comments/updates
+AzimuthBasic.saveConfig("SectorOverview", config, {
+  _version = "Config version. Don't touch",
+  AllowPlayerTracking = "Default: true. If false, server will not reveal players coordinates (useful for PvP servers)."
+})
 
 function SectorOverview.sendServerConfig()
     invokeClientFunction(Player(callingPlayer), "receiveServerConfig", { AllowPlayerTracking = config.AllowPlayerTracking })
