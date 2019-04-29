@@ -29,7 +29,7 @@ msgstr "Добавить выбранного игрока из выпадающ
 
 #: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
 msgid "Remove the selected player from the list of tracked players."
-msgstr "брать выбранного игрока из списка отслеживаемых игроков."
+msgstr "Убрать выбранного игрока из списка отслеживаемых игроков."
 
 #: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
 msgid "Server doesn't allow to track players."

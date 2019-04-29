@@ -1,8 +1,8 @@
 package.path = package.path .. ";data/scripts/lib/?.lua"
 package.path = package.path .. ";data/scripts/player/?.lua"
-require("utility")
-require("stringutility")
-require("callable")
+include("utility")
+include("stringutility")
+include("callable")
 
 local status, AzimuthBasic = pcall(include, 'azimuthlib-basic')
 if not status then
@@ -18,22 +18,9 @@ if onClient() then -- CLIENT
 
 
 local configOptions = {
-  _version = {
-    comment = "Config version. Don't touch",
-    default = "1.1"
-  },
-  WindowWidth = {
-    comment = "UI window width",
-    default = 300,
-    min = 200,
-    max = 800
-  },
-  WindowHeight = {
-    comment = "UI window height",
-    default = 400,
-    min = 200,
-    max = 800
-  }
+  _version = { default = "1.1", comment = "Config version. Don't touch." },
+  WindowWidth = { default = 300, min = 200, max = 800, comment = "UI window width" },
+  WindowHeight = { default = 400, min = 200, max = 800, comment = "UI window height" }
 }
 local config = AzimuthBasic.loadConfig("SectorOverview", configOptions)
 -- resave config file with comments/updates
@@ -280,14 +267,8 @@ else -- SERVER
 
 
 local configOptions = {
-  _version = {
-    comment = "Config version. Don't touch",
-    default = "1.1"
-  },
-  AllowPlayerTracking = {
-    comment = "If false, server will not reveal players coordinates (useful for PvP servers).",
-    default = true
-  }
+  _version = { default = "1.1", comment = "Config version. Don't touch." },
+  AllowPlayerTracking = { default = true,  comment = "If false, server will not reveal players coordinates (useful for PvP servers)." }
 }
 local config = AzimuthBasic.loadConfig("SectorOverview", configOptions)
 -- resave config file with comments/updates
