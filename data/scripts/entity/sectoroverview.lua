@@ -3,12 +3,7 @@ package.path = package.path .. ";data/scripts/player/?.lua"
 include("utility")
 include("stringutility")
 include("callable")
-
-local status, AzimuthBasic = pcall(include, 'azimuthlib-basic')
-if not status then
-    eprint("[ERROR][SectorOverview]: Couldn't load AzimuthLib module 'basic': " ..  AzimuthBasic)
-    return
-end
+local Azimuth = include("azimuthlib-basic")
 
 
 -- namespace SectorOverview
@@ -22,9 +17,10 @@ local configOptions = {
   WindowWidth = { default = 300, min = 200, max = 800, comment = "UI window width" },
   WindowHeight = { default = 400, min = 200, max = 800, comment = "UI window height" }
 }
-local config = AzimuthBasic.loadConfig("SectorOverview", configOptions)
--- resave config file with comments/updates
-AzimuthBasic.saveConfig("SectorOverview", config, configOptions)
+local config, isModified = Azimuth.loadConfig("SectorOverview", configOptions)
+if isModified then
+    Azimuth.saveConfig("SectorOverview", config, configOptions)
+end
 
 local window, tabbedWindow, stationList, gateList, playerTab, playerList, playerCombo, entities, playerSortedList
 local listBoxes = {}
@@ -268,11 +264,12 @@ else -- SERVER
 
 local configOptions = {
   _version = { default = "1.1", comment = "Config version. Don't touch." },
-  AllowPlayerTracking = { default = true,  comment = "If false, server will not reveal players coordinates (useful for PvP servers)." }
+  AllowPlayerTracking = { default = true, comment = "If false, server will not reveal players coordinates (useful for PvP servers)." }
 }
-local config = AzimuthBasic.loadConfig("SectorOverview", configOptions)
--- resave config file with comments/updates
-AzimuthBasic.saveConfig("SectorOverview", config, configOptions)
+local config, isModified = Azimuth.loadConfig("SectorOverview", configOptions)
+if isModified then
+    Azimuth.saveConfig("SectorOverview", config, configOptions)
+end
 
 
 function SectorOverview.sendServerConfig()
