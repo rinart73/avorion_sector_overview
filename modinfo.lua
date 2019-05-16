@@ -51,7 +51,7 @@ meta =
 
     -- Set to true if the mod changes the savegame in a potentially breaking way, as in it adds scripts or mechanics that get saved into database and no longer work once the mod gets disabled
     -- logically, if a mod is client-side only, it can't alter savegames, but Avorion doesn't check for that at the moment
-    saveGameAltering = true,
+    saveGameAltering = false,
 
     -- Contact info for other users to reach you in case they have questions
     contact = "rinart73@gmail.com",
