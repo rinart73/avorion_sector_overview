@@ -43,4 +43,20 @@ msgstr ""
 msgid "Show the selected player on the galaxy map."
 msgstr ""
 
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Ship List"
+msgstr ""
 
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Not owned"
+msgstr ""
+
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Rectangles '█' near stations and ships names indicate relations with an owner faction.\n"
+"\n"
+"Green object name means that ship/station belongs to you.\n"
+"Purple - your alliance.\n"
+"Yellow - other players.\n"
+"Blue - other alliances.\n"
+"White - NPC factions."
+msgstr ""

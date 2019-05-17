@@ -43,4 +43,26 @@ msgstr "Не удается получить координаты, %s не су�
 msgid "Show the selected player on the galaxy map."
 msgstr "Показать выбранного игрока на карте галактики."
 
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Ship List"
+msgstr "Список кораблей"
 
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Not owned"
+msgstr "Нет владельца"
+
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Rectangles '█' near stations and ships names indicate relations with an owner faction.\n"
+"\n"
+"Green object name means that ship/station belongs to you.\n"
+"Purple - your alliance.\n"
+"Yellow - other players.\n"
+"Blue - other alliances.\n"
+"White - NPC factions."
+msgstr "Квадраты '█' рядом с именами станций и кораблей указывают на ваши отношения с владельцем.\n"
+"\n"
+"Зеленое имя объекта означает, что этот корабль/станция принадлежит вам.\n"
+"Фиолетовое - вашему альянсу.\n"
+"Желтое - другим игрокам.\n"
+"Синее - другим альянсам.\n"
+"Белое - НПС фракциям."
