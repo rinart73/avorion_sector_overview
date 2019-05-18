@@ -11,6 +11,26 @@ SectorOverview = {}
 if onClient() then -- CLIENT
 
 
+local configOptions = {
+  _version = { default = "1.1", comment = "Config version. Don't touch." },
+  WindowWidth = { default = 300, min = 280, max = 800, format = "floor", comment = "UI window width" },
+  WindowHeight = { default = 400, min = 200, max = 800, format = "floor", comment = "UI window height" },
+  NotifyAboutEnemies = { default = true, comment = "If true, will notify when enemy player (< -40000) enters a sector." }
+}
+local config, isModified = Azimuth.loadConfig("SectorOverview", configOptions)
+if isModified then
+    Azimuth.saveConfig("SectorOverview", config, configOptions)
+end
+
+local window, tabbedWindow, stationList, gateList, shipList, playerTab, playerList, playerCombo, entities, playerSortedList
+local windowWidthBox, windowHeightBox, notifyAboutEnemiesCheckBox
+local settingsModified = false
+local listBoxes = {}
+local playerAddedList = {}
+local playerIndexMap = {}
+local playerCoords = {}
+local ships = {}
+
 local function relationsColor(value, moreGreen)
     if value >= 75000 then
         return moreGreen and ColorRGB(0.149, 0.898, 0.149) or ColorRGB(0.5764, 0.9529, 0.5725)
@@ -55,29 +75,61 @@ local function relationsColor(value, moreGreen)
     return ColorRGB(c.x, c.y, c.z)
 end
 
-local configOptions = {
-  _version = { default = "1.1", comment = "Config version. Don't touch." },
-  WindowWidth = { default = 300, min = 200, max = 800, format = "floor", comment = "UI window width" },
-  WindowHeight = { default = 400, min = 200, max = 800, format = "floor", comment = "UI window height" }
-}
-local config, isModified = Azimuth.loadConfig("SectorOverview", configOptions)
-if isModified then
-    Azimuth.saveConfig("SectorOverview", config, configOptions)
+local function updateShipList()
+    shipList:clear()
+    local player = Player()
+    local ship, factionIndex, relations, nameColor
+    for _, shipName in ipairs(ships) do
+        ship = entities[shipName]
+        if valid(ship) then
+            factionIndex = ship.factionIndex or -1
+            relations = player:getRelations(factionIndex)
+            nameColor = ColorRGB(1, 1, 1)
+            if not ship.aiOwned then
+                if factionIndex == player.index then
+                    nameColor = ColorInt(0xff93F392)
+                elseif factionIndex == player.allianceIndex then
+                    nameColor = ColorInt(0xffB534B3)
+                elseif ship.playerOwned then
+                    nameColor = ColorInt(0xffF1F361)
+                else
+                    nameColor = ColorInt(0xff6666CC)
+                end
+            end
+            shipList:addRow()
+            shipList:setEntry(0, shipList.rows - 1, "█", false, false, relationsColor(relations, true))
+            shipList:setEntry(1, shipList.rows - 1, shipName, false, false, nameColor)
+        end
+    end
 end
 
-local window, tabbedWindow, stationList, gateList, shipList, playerTab, playerList, playerCombo, entities, playerSortedList
-local listBoxes = {}
-local playerAddedList = {}
-local playerIndexMap = {}
-local playerCoords = {}
+local function getEntityName(entity)
+    local entryName
+    if entity.translatedTitle and entity.translatedTitle ~= "" then
+        entryName = entity.translatedTitle .. " - " .. entity.name
+    elseif entity.title and entity.title ~= "" then
+        entryName = (entity.title % entity:getTitleArguments()) .. " - " .. entity.name
+    else
+        entryName = entity.name
+    end
+    if Galaxy():factionExists(entity.factionIndex) then
+        entryName = entryName .. " | " .. Faction(entity.factionIndex).translatedName
+    else
+        entryName = entryName .. " | " .. ("Not owned"%_t)
+    end
+    return entryName
+end
 
+function SectorOverview.initialize()
+    Sector():registerCallback("onEntityJump", "onEntityLeft")
+    Sector():registerCallback("onDestroyed", "onEntityLeft")
+end
 
 function SectorOverview.getIcon()
     return "data/textures/icons/sectoroverview/icon.png"
 end
 
-
-function SectorOverview.interactionPossible(playerIndex, option)
+function SectorOverview.interactionPossible(playerIndex)
     local player = Player(playerIndex)
 
     local craft = player.craft
@@ -123,7 +175,7 @@ White - NPC factions.]]%_t
 
     -- stations
     local tab = tabbedWindow:createTab("Station List", "data/textures/icons/solar-system.png", "Station List"%_t)
-    local hsplit = UIHorizontalSplitter(Rect(vec2(0, 0), tabbedWindow.size ), 10, 0, 0.5)
+    local hsplit = UIHorizontalSplitter(Rect(vec2(0, 0), tabbedWindow.size), 10, 0, 0.5)
     hsplit.bottomSize = 40
     stationList = tab:createListBoxEx(hsplit.top)
     stationList.columns = 2
@@ -137,14 +189,17 @@ White - NPC factions.]]%_t
     shipList = tab:createListBoxEx(hsplit.top)
     shipList.columns = 2
     shipList:setColumnWidth(0, 15)
-    shipList:setColumnWidth(1, hsplit.top.size.x - 25) -- additional 10px margin, otherwise text goes out of the listbox
+    shipList:setColumnWidth(1, hsplit.top.size.x - 25)
     shipList.onSelectFunction = "onEntityExNameSelect"
     listBoxes[tab.index] = shipList
     
     -- gates
     tab = tabbedWindow:createTab("Gate List", "data/textures/icons/vortex.png", "Gate List"%_t)
-    gateList = tab:createListBox(hsplit.top)
-    gateList.onSelectFunction = "onEntityNameSelect"
+    gateList = tab:createListBoxEx(hsplit.top)
+    gateList.columns = 2
+    gateList:setColumnWidth(0, 15)
+    gateList:setColumnWidth(1, hsplit.top.size.x - 25)
+    gateList.onSelectFunction = "onEntityExNameSelect"
     listBoxes[tab.index] = gateList
     
     -- players
@@ -153,17 +208,17 @@ White - NPC factions.]]%_t
     showButton.maxTextSize = 14
     showButton.tooltip = [[Show the selected player on the galaxy map.]]%_t
 
-    hsplit = UIHorizontalSplitter(Rect(vec2(0, 40), tabbedWindow.size - vec2(0, 50) ), 10, 0, 0.5)
-    hsplit.bottomSize = 65
-    playerList = playerTab:createListBox(hsplit.top)
+    local hsplit2 = UIHorizontalSplitter(Rect(vec2(0, 40), tabbedWindow.size - vec2(0, 50) ), 10, 0, 0.5)
+    hsplit2.bottomSize = 65
+    playerList = playerTab:createListBox(hsplit2.top)
     listBoxes[playerTab.index] = playerList
 
-    local hsplit = UIHorizontalSplitter(hsplit.bottom, 10, 0, 0.5)
-    hsplit.bottomSize = 35
+    hsplit2 = UIHorizontalSplitter(hsplit2.bottom, 10, 0, 0.5)
+    hsplit2.bottomSize = 35
 
-    playerCombo = playerTab:createComboBox(hsplit.top, "")
+    playerCombo = playerTab:createComboBox(hsplit2.top, "")
 
-    local vsplit = UIVerticalSplitter(hsplit.bottom, 10, 0, 0.5)
+    local vsplit = UIVerticalSplitter(hsplit2.bottom, 10, 0, 0.5)
 
     local button = playerTab:createButton(vsplit.left, "Add"%_t, "onAddPlayerTracking")
     button.maxTextSize = 14
@@ -171,35 +226,43 @@ White - NPC factions.]]%_t
     button = playerTab:createButton(vsplit.right, "Remove"%_t, "onRemovePlayerTracking")
     button.maxTextSize = 14
     button.tooltip = "Remove the selected player from the list of tracked players."%_t
+    
+    -- settings
+    tab = tabbedWindow:createTab("Settings", "data/textures/icons/gears.png", "Settings"%_t)
+    local lister = UIVerticalLister(hsplit.top, 5, 0)
+    -- window width
+    local rect = lister:placeCenter(vec2(lister.inner.width, 25))
+    local splitter = UIVerticalSplitter(rect, 10, 0, 0.65)
+    tab:createLabel(splitter.left.lower + vec2(0, 3), "Window width"%_t, 14)
+    windowWidthBox = tab:createTextBox(splitter.right, "")
+    windowWidthBox.allowedCharacters = "0123456789"
+    windowWidthBox.text = config.WindowWidth
+    windowWidthBox.onTextChangedFunction = "onSettingsModified"
+    -- window height
+    rect = lister:placeCenter(vec2(lister.inner.width, 25))
+    splitter = UIVerticalSplitter(rect, 10, 0, 0.65)
+    tab:createLabel(splitter.left.lower + vec2(0, 3), "Window height"%_t, 14)
+    windowHeightBox = tab:createTextBox(splitter.right, "")
+    windowHeightBox.allowedCharacters = "0123456789"
+    windowHeightBox.text = config.WindowHeight
+    windowHeightBox.onTextChangedFunction = "onSettingsModified"
+    -- notify about enemies
+    rect = lister:placeCenter(vec2(lister.inner.width, 25))
+    notifyAboutEnemiesCheckBox = tab:createCheckBox(rect, "Notify - enemy players"%_t, "onSettingsModified")
+    notifyAboutEnemiesCheckBox:setCheckedNoCallback(config.NotifyAboutEnemies)
 end
 
 function SectorOverview.onShowWindow()
     entities = {}
     stationList:clear()
-    shipList:clear()
     gateList:clear()
 
     local player = Player()
     -- stations
     local entryName
     local stations = {}
-    local owner
     for _, station in ipairs({Sector():getEntitiesByType(EntityType.Station)}) do
-        if station.translatedTitle and station.translatedTitle ~= "" then
-            entryName = station.translatedTitle .. " - " .. station.name
-        elseif station.title and station.title ~= "" then
-            entryName = (station.title % station:getTitleArguments()) .. " - " .. station.name
-        else
-            entryName = station.name
-        end
-        --if not station.aiOwned then
-            owner = Owner(station.index)
-            if owner then
-                entryName = entryName .. " | " .. owner.name
-            else
-                entryName = entryName .. " | " .. ("Not owned"%_t)
-            end
-        --end
+        entryName = getEntityName(station)
         stations[#stations+1] = entryName
         entities[entryName] = station
     end
@@ -227,53 +290,44 @@ function SectorOverview.onShowWindow()
         stationList:setEntry(1, stationList.rows - 1, stationName, false, false, nameColor)
     end
     -- ships
-    local ships = {}
-    for _, ship in ipairs({Sector():getEntitiesByType(EntityType.Ship)}) do
-        if ship.translatedTitle and ship.translatedTitle ~= "" then
-            entryName = ship.translatedTitle .. " - " .. ship.name
-        elseif ship.title and ship.title ~= "" then
-            entryName = (ship.title % ship:getTitleArguments()) .. " - " .. ship.name
-        else
-            entryName = ship.name
+    ships = {}
+    for _, ship in ipairs({Sector():getEntitiesByComponents(ComponentType.Engine)}) do
+        if ship.isShip or ship.isDrone then
+            entryName = getEntityName(ship)
+            ships[#ships+1] = entryName
+            entities[entryName] = ship
         end
-        --if not ship.aiOwned then
-            owner = Owner(ship.index)
-            if owner and owner.name and owner.name ~= "" then
-                entryName = entryName .. " | " .. owner.name
-            else
-                entryName = entryName .. " | " .. ("Not owned"%_t)
-            end
-        --end
-        ships[#ships+1] = entryName
-        entities[entryName] = ship
     end
     table.sort(ships)
-    local ship
-    for _, shipName in ipairs(ships) do
-        ship = entities[shipName]
-        factionIndex = ship.factionIndex
+    updateShipList()
+    -- gates
+    local gateName
+    for _, gate in pairs({Sector():getEntitiesByScript("data/scripts/entity/gate.lua")}) do
+        factionIndex = gate.factionIndex or -1
         relations = player:getRelations(factionIndex)
         nameColor = ColorRGB(1, 1, 1)
-        if not ship.aiOwned then
+        if not gate.aiOwned then
             if factionIndex == player.index then
                 nameColor = ColorInt(0xff93F392)
             elseif factionIndex == player.allianceIndex then
                 nameColor = ColorInt(0xffB534B3)
-            elseif ship.playerOwned then
+            elseif gate.playerOwned then
                 nameColor = ColorInt(0xffF1F361)
             else
                 nameColor = ColorInt(0xff6666CC)
             end
         end
-
-        shipList:addRow()
-        shipList:setEntry(0, shipList.rows - 1, "█", false, false, relationsColor(relations, true))
-        shipList:setEntry(1, shipList.rows - 1, shipName, false, false, nameColor)
-    end
-    -- gates
-    for _, gate in pairs({Sector():getEntitiesByScript("data/scripts/entity/gate.lua")}) do
-        gateList:addEntry(gate.title)
+        gateName = gate.title
+        if Galaxy():factionExists(factionIndex) then
+            gateName = gateName .. " | " .. Faction(factionIndex).translatedName
+        else
+            gateName = gateName .. " | " .. ("Not owned"%_t)
+        end
+        
         entities[gate.title] = gate
+        gateList:addRow()
+        gateList:setEntry(0, gateList.rows - 1, "█", false, false, relationsColor(relations, true))
+        gateList:setEntry(1, gateList.rows - 1, gateName, false, false, nameColor)
     end
 
     local status, serverConfig, playerTracking = player:invokeFunction("azimuthlib-clientdata.lua", "getValuem", "SectorOverview.config", "SectorOverview.playerTracking")
@@ -306,13 +360,78 @@ function SectorOverview.onShowWindow()
 end
 
 function SectorOverview.onCloseWindow()
-    if not config.AllowPlayerTracking then return end
-    Player():invokeFunction("azimuthlib-clientdata.lua", "setValue", "SectorOverview.playerTracking", {
-      playerAddedList = playerAddedList,
-      playerIndexMap = playerIndexMap,
-      playerCoords = playerCoords,
-      playerSortedList = playerSortedList
-    })
+    if config.AllowPlayerTracking then
+        Player():invokeFunction("azimuthlib-clientdata.lua", "setValue", "SectorOverview.playerTracking", {
+          playerAddedList = playerAddedList,
+          playerIndexMap = playerIndexMap,
+          playerCoords = playerCoords,
+          playerSortedList = playerSortedList
+        })
+    end
+    -- save config
+    if settingsModified then
+        -- width
+        config.WindowWidth = tonumber(windowWidthBox.text) or 0
+        if config.WindowWidth < 280 then config.WindowWidth = 280
+        elseif config.WindowWidth > 800 then config.WindowWidth = 800 end
+        windowWidthBox.text = config.WindowWidth
+        -- height
+        config.WindowHeight = tonumber(windowHeightBox.text) or 0
+        if config.WindowHeight < 200 then config.WindowHeight = 200
+        elseif config.WindowHeight > 800 then config.WindowHeight = 800 end
+        windowHeightBox.text = config.WindowHeight
+        -- notify about enemies
+        config.NotifyAboutEnemies = notifyAboutEnemiesCheckBox.checked
+        -- remove server settings
+        config.AllowPlayerTracking = nil
+
+        Azimuth.saveConfig("SectorOverview", config, configOptions)
+        settingsModified = false
+    end
+end
+
+function SectorOverview.update() -- for deferredCallback to work
+end
+
+function SectorOverview.onEntityEntered(entityIndex)
+    deferredCallback(0.2, "deferredOnEntityEntered", entityIndex)
+end
+
+function SectorOverview.deferredOnEntityEntered(entityIndex)
+    local entity = Entity(entityIndex)
+    if not valid(entity) then return end
+    local player = Player()
+    -- notify
+    if config.NotifyAboutEnemies and not entity.aiOwned and player:getRelations(entity.factionIndex) < -40000 then
+        local factionName = "?"
+        if Galaxy():factionExists(entity.factionIndex) then
+            factionName = Faction(entity.factionIndex).translatedName
+        end
+        displayChatMessage(string.format("Detected enemy ship %s (%s) in the sector!"%_t, entity.name, factionName), "Sector Overview"%_t, 2)
+    end
+    -- add to ship list
+    if window.visible then
+        local entryName = getEntityName(entity)
+        ships[#ships+1] = entryName
+        entities[entryName] = entity
+        table.sort(ships)
+        updateShipList()
+    end
+end
+
+function SectorOverview.onEntityLeft(entityIndex)
+    local entity = Entity(entityIndex)
+    if not valid(entity) or (not entity.isShip and not entity.isDrone) or not window or not window.visible then return end
+
+    local entryName = getEntityName(entity)
+    for i = 1, #ships do
+        if ships[i] == entryName then
+            table.remove(ships, i)
+            break
+        end
+    end
+    entities[entryName] = nil
+    updateShipList()
 end
 
 function SectorOverview.onEntityExNameSelect(entryId)
@@ -334,6 +453,10 @@ function SectorOverview.onEntityNameSelect(entryId)
     if entity then
         Player().selectedObject = entity
     end
+end
+
+function SectorOverview.onSettingsModified()
+    settingsModified = true
 end
 
 function SectorOverview.onAddPlayerTracking()
@@ -425,6 +548,18 @@ if isModified then
     Azimuth.saveConfig("SectorOverview", config, configOptions)
 end
 
+function SectorOverview.initialize()
+    Sector():registerCallback("onEntityCreate", "onEntityEntered")
+    Sector():registerCallback("onEntityEntered", "onEntityEntered")
+end
+
+function SectorOverview.onEntityEntered(entityIndex)
+    local entity = Entity(entityIndex)
+    if not entity.isShip or entity.isDrone then return end
+    for _, playerIndex in pairs({Entity():getPilotIndices()}) do
+        invokeClientFunction(Player(playerIndex), "onEntityEntered", entityIndex)
+    end
+end
 
 function SectorOverview.sendServerConfig()
     invokeClientFunction(Player(callingPlayer), "receiveServerConfig", { AllowPlayerTracking = config.AllowPlayerTracking })

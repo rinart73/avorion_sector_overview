@@ -66,3 +66,23 @@ msgstr "Квадраты '█' рядом с именами станций и к
 "Желтое - другим игрокам.\n"
 "Синее - другим альянсам.\n"
 "Белое - НПС фракциям."
+
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Window width"
+msgstr "Ширина окна"
+
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Window height"
+msgstr "Высота окна"
+
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Show NPC names"
+msgstr "Показывать имена НПС"
+
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Notify - enemy players"
+msgstr "Уведомлять - вражеские игроки"
+
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Detected enemy ship %s (%s) in the sector!"
+msgstr "Обнаружен вражеский корабль %s (%s) в секторе!"

@@ -60,3 +60,23 @@ msgid "Rectangles '█' near stations and ships names indicate relations with an
 "Blue - other alliances.\n"
 "White - NPC factions."
 msgstr ""
+
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Window width"
+msgstr ""
+
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Window height"
+msgstr ""
+
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Show NPC names"
+msgstr ""
+
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Notify - enemy players"
+msgstr ""
+
+#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+msgid "Detected enemy ship %s (%s) in the sector!"
+msgstr ""
