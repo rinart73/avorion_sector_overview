@@ -324,7 +324,7 @@ function SectorOverview.onShowWindow()
             gateName = gateName .. " | " .. ("Not owned"%_t)
         end
         
-        entities[gate.title] = gate
+        entities[gateName] = gate
         gateList:addRow()
         gateList:setEntry(0, gateList.rows - 1, "█", false, false, relationsColor(relations, true))
         gateList:setEntry(1, gateList.rows - 1, gateName, false, false, nameColor)
