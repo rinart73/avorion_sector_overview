@@ -1,5 +1,6 @@
 package.path = package.path .. ";data/scripts/lib/?.lua"
 package.path = package.path .. ";data/scripts/player/?.lua"
+
 include("utility")
 include("stringutility")
 include("callable")
@@ -22,6 +23,7 @@ if isModified then
     Azimuth.saveConfig("SectorOverview", config, configOptions)
 end
 
+local gameVersion = GameVersion()
 local window, tabbedWindow, stationList, gateList, shipList, playerTab, playerList, playerCombo, entities, playerSortedList
 local windowWidthBox, windowHeightBox, notifyAboutEnemiesCheckBox
 local settingsModified = false
@@ -31,15 +33,12 @@ local playerIndexMap = {}
 local playerCoords = {}
 local ships = {}
 
-local function relationsColor(value, moreGreen)
+local function relationsColor(value)
     if value >= 75000 then
-        return moreGreen and ColorRGB(0.149, 0.898, 0.149) or ColorRGB(0.5764, 0.9529, 0.5725)
+        return ColorRGB(0.149, 0.898, 0.149)
     end
     if value >= 55000 then
-        local green = vec3(0.5764, 0.9529, 0.5725)
-        if moreGreen then
-            green = vec3(0.149, 0.898, 0.149)
-        end
+        local green = vec3(0.149, 0.898, 0.149)
         local c = lerp(value, 55000, 75000, vec3(0.3764, 0.9411, 0.749), green)
         return ColorRGB(c.x, c.y, c.z)
     end
@@ -78,12 +77,12 @@ end
 local function updateShipList()
     shipList:clear()
     local player = Player()
+    local ownerFaction = Entity().allianceOwned and Alliance() or Player()
     local ship, factionIndex, relations, nameColor
     for _, shipName in ipairs(ships) do
         ship = entities[shipName]
         if valid(ship) then
             factionIndex = ship.factionIndex or -1
-            relations = player:getRelations(factionIndex)
             nameColor = ColorRGB(1, 1, 1)
             if not ship.aiOwned then
                 if factionIndex == player.index then
@@ -97,7 +96,13 @@ local function updateShipList()
                 end
             end
             shipList:addRow()
-            shipList:setEntry(0, shipList.rows - 1, "█", false, false, relationsColor(relations, true))
+            if gameVersion.minor >= 26 then
+                relations = ownerFaction:getRelation(factionIndex) -- Relation object
+                shipList:setEntry(0, shipList.rows - 1, "█", false, false, relations.color)
+            else
+                relations = ownerFaction:getRelations(factionIndex) -- number
+                shipList:setEntry(0, shipList.rows - 1, "█", false, false, relationsColor(relations))
+            end
             shipList:setEntry(1, shipList.rows - 1, shipName, false, false, nameColor)
         end
     end
@@ -258,6 +263,7 @@ function SectorOverview.onShowWindow()
     gateList:clear()
 
     local player = Player()
+    local ownerFaction = Entity().allianceOwned and Alliance() or Player()
     -- stations
     local entryName
     local stations = {}
@@ -271,7 +277,6 @@ function SectorOverview.onShowWindow()
     for _, stationName in ipairs(stations) do
         station = entities[stationName]
         factionIndex = station.factionIndex or -1
-        relations = player:getRelations(factionIndex)
         nameColor = ColorRGB(1, 1, 1)
         if not station.aiOwned then
             if factionIndex == player.index then
@@ -286,7 +291,13 @@ function SectorOverview.onShowWindow()
         end
         
         stationList:addRow()
-        stationList:setEntry(0, stationList.rows - 1, "█", false, false, relationsColor(relations, true))
+        if gameVersion.minor >= 26 then
+            relations = ownerFaction:getRelation(factionIndex) -- Relation object
+            stationList:setEntry(0, stationList.rows - 1, "█", false, false, relations.color)
+        else
+            relations = ownerFaction:getRelations(factionIndex) -- number
+            stationList:setEntry(0, stationList.rows - 1, "█", false, false, relationsColor(relations))
+        end
         stationList:setEntry(1, stationList.rows - 1, stationName, false, false, nameColor)
     end
     -- ships
@@ -304,7 +315,6 @@ function SectorOverview.onShowWindow()
     local gateName
     for _, gate in pairs({Sector():getEntitiesByScript("data/scripts/entity/gate.lua")}) do
         factionIndex = gate.factionIndex or -1
-        relations = player:getRelations(factionIndex)
         nameColor = ColorRGB(1, 1, 1)
         if not gate.aiOwned then
             if factionIndex == player.index then
@@ -326,7 +336,13 @@ function SectorOverview.onShowWindow()
         
         entities[gateName] = gate
         gateList:addRow()
-        gateList:setEntry(0, gateList.rows - 1, "█", false, false, relationsColor(relations, true))
+        if gameVersion.minor >= 26 then
+            relations = ownerFaction:getRelation(factionIndex) -- Relation object
+            gateList:setEntry(0, gateList.rows - 1, "█", false, false, relations.color)
+        else
+            relations = ownerFaction:getRelations(factionIndex) -- number
+            gateList:setEntry(0, gateList.rows - 1, "█", false, false, relationsColor(relations))
+        end
         gateList:setEntry(1, gateList.rows - 1, gateName, false, false, nameColor)
     end
 
@@ -402,7 +418,8 @@ function SectorOverview.deferredOnEntityEntered(entityIndex)
     if not valid(entity) then return end
     local player = Player()
     -- notify
-    if config.NotifyAboutEnemies and not entity.aiOwned and player:getRelations(entity.factionIndex) < -40000 then
+    if config.NotifyAboutEnemies and not entity.aiOwned
+      and (player:getRelations(entity.factionIndex) < -40000 or (player.alliance and player.alliance:getRelations(entity.factionIndex) < -40000)) then
         local factionName = "?"
         if Galaxy():factionExists(entity.factionIndex) then
             factionName = Faction(entity.factionIndex).translatedName
