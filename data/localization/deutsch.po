@@ -1,88 +1,69 @@
-# ========== mods\SectorOverview\data\scripts\entity\sectoroverview.lua ==========
-#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
-msgid "Sector Overview"
-msgstr "Sektor Übersicht"
-
-#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
-msgid "Station List"
-msgstr "Stations Liste"
-
-#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
-msgid "Gate List"
-msgstr "Tor Liste"
-
-#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
-msgid "Player List"
-msgstr "Spieler Liste"
-
-#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
-msgid "Show on Galaxy Map"
-msgstr "Auf Galaxie Karte anzeigen"
-
-#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
-msgid "Add"
-msgstr "Hinzufügen"
-
-#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
-msgid "Add the selected player from the combo box to the list of tracked players."
-msgstr "Markierter Spieler zu Liste der verfolgten Spieler hinzufügen."
-
-#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
-msgid "Remove the selected player from the list of tracked players."
-msgstr "Markierten Spieler von der Liste der verfolgten Spieler entfernen."
-
-#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
-msgid "Server doesn't allow to track players."
-msgstr "Der Server erlaubt es nicht Spieler zu verfolgen"
-
-#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
-msgid "Can't get coordinate, %s doesn't exist."
-msgstr "Kann die Koordinaten %s nicht finden."
-
-#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
-msgid "Show the selected player on the galaxy map."
-msgstr "Zeige den markierten Spieler auf der Galaxie Karte."
-
-#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
-msgid "Ship List"
-msgstr "Schiffs Liste"
-
-#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+# ========== data\scripts\entity\sectoroverview.lua ==========
+#: data\scripts\entity\sectoroverview.lua:
+#: data\scripts\player\ui\sectorshipoverview.lua:
 msgid "Not owned"
 msgstr "Nicht im besitz"
 
-#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
-msgid "Rectangles '█' near stations and ships names indicate relations with an owner faction.\n"
-"\n"
-"Green object name means that ship/station belongs to you.\n"
-"Purple - your alliance.\n"
-"Yellow - other players.\n"
-"Blue - other alliances.\n"
-"White - NPC factions."
-msgstr "Rechtecke '█' in der Nähe von Stationen und Schiffsnamen zeigen die Beziehungen zu einem Fraktionsinhaber an.\n"
-"\n"
-"Grüne objekt namen bedeuten das das Schiff/Station dir gehören\n"
-"Lila - deine Allianz.\n"
-"Gelb - andere Spieler.\n"
-"Blau - andere Allianzen.\n"
-"Weiß - NPC Fraktion."
+#: data\scripts\entity\sectoroverview.lua:
+msgid "Sector Overview"
+msgstr "Sektor Übersicht"
 
-#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+#: data\scripts\entity\sectoroverview.lua:
+msgid "Station List"
+msgstr "Stations Liste"
+
+#: data\scripts\entity\sectoroverview.lua:
+msgid "Ship List"
+msgstr "Schiffs Liste"
+
+#: data\scripts\entity\sectoroverview.lua:
+msgid "Gate & Wormhole List"
+msgstr "Tor Liste"
+
+#: data\scripts\entity\sectoroverview.lua:
+msgid "Player List"
+msgstr "Spieler Liste"
+
+#: data\scripts\entity\sectoroverview.lua:
+msgid "Show on Galaxy Map"
+msgstr "Auf Galaxie Karte anzeigen"
+
+#: data\scripts\entity\sectoroverview.lua:
+msgid "Add"
+msgstr "Hinzufügen"
+
+#: data\scripts\entity\sectoroverview.lua:
+msgid "Add the selected player from the combo box to the list of tracked players."
+msgstr "Markierter Spieler zu Liste der verfolgten Spieler hinzufügen."
+
+#: data\scripts\entity\sectoroverview.lua:
+msgid "Remove the selected player from the list of tracked players."
+msgstr "Markierten Spieler von der Liste der verfolgten Spieler entfernen."
+
+#: data\scripts\entity\sectoroverview.lua:
 msgid "Window width"
 msgstr "Fenster Breite"
 
-#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+#: data\scripts\entity\sectoroverview.lua:
 msgid "Window height"
 msgstr "Fenster Höhe"
 
-#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
-msgid "Show NPC names"
-msgstr "Zeige NPC namen"
-
-#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
+#: data\scripts\entity\sectoroverview.lua:
 msgid "Notify - enemy players"
 msgstr "Benachrichtigen - feindliche Spieler"
 
-#: mods\SectorOverview\data\scripts\entity\sectoroverview.lua:
-msgid "Detected enemy ship %s (%s) in the sector!"
-msgstr "Feindliches Schiff ist im Sektor: %s (%s)"
+#: data\scripts\entity\sectoroverview.lua:
+msgid "Show NPC names"
+msgstr "Zeige NPC namen"
+
+#: data\scripts\entity\sectoroverview.lua:
+msgid "Detected enemy ship '%s' (%s) in the sector!"
+msgstr "Feindliches Schiff ist im Sektor: '%s' (%s)"
+
+#: data\scripts\entity\sectoroverview.lua:
+msgid "Server doesn't allow to track players."
+msgstr "Der Server erlaubt es nicht Spieler zu verfolgen"
+
+#: data\scripts\entity\sectoroverview.lua:
+msgid "Show the selected player on the galaxy map."
+msgstr "Zeige den markierten Spieler auf der Galaxie Karte."
