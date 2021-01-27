@@ -5,73 +5,52 @@ local CustomTabbedWindow = include("azimuthlib-customtabbedwindow")
 
 local SectorOverviewConfig -- client/server
 local sectorOverview_notifyAboutEnemies -- server
-local sectorOverview_configOptions, sectorOverview_isVisible, sectorOverview_refreshCounter, sectorOverview_settingsModified, sectorOverview_playerAddedList, sectorOverview_playerCoords -- client
+local sectorOverview_configOptions, sectorOverview_isVisible, sectorOverview_refreshCounter, sectorOverview_settingsModified, sectorOverview_playerAddedList, sectorOverview_playerCoords, sectorOverview_GT135 -- client
 local sectorOverview_tabbedWindow, sectorOverview_stationTab, sectorOverview_stationList, sectorOverview_shipTab, sectorOverview_shipList, sectorOverview_gateTab, sectorOverview_gateList, sectorOverview_playerTab, sectorOverview_playerList, sectorOverview_playerCombo, sectorOverview_windowWidthBox, sectorOverview_windowHeightBox, sectorOverview_notifyAboutEnemiesCheckBox, sectorOverview_showNPCNamesCheckBox, sectorOverview_toggleBtnComboBox, sectorOverview_prevTabBtnComboBox, sectorOverview_nextTabBtnComboBox -- client UI
 
 
 if onClient() then
 
 
+sectorOverview_GT135 = GameVersion() >= Version(1, 3, 5)
+
 -- PREDEFINED --
 
 function SectorShipOverview.initialize() -- overridden
     local allowedKeys = {
-      { "", "-" },
-      { "KP_Divide", "Divide"%_t },
-      { "KP_Multiply", "Multiply"%_t },
-      { "KP_Minus", "Minus"%_t },
-      { "KP_Plus", "Plus"%_t },
-      { "KP_1", "1" },
-      { "KP_2", "2" },
-      { "KP_3", "3" },
-      { "KP_4", "4" },
-      { "KP_5", "5" },
-      { "KP_6", "6" },
-      { "KP_7", "7" },
-      { "KP_8", "8" },
-      { "KP_9", "9" },
-      { "KP_0", "0" }
+      {"", "-"},
+      {"KP_Divide", "Divide"%_t},
+      {"KP_Multiply", "Multiply"%_t},
+      {"KP_Minus", "Minus"%_t},
+      {"KP_Plus", "Plus"%_t},
+      {"KP_1", "1"},
+      {"KP_2", "2"},
+      {"KP_3", "3"},
+      {"KP_4", "4"},
+      {"KP_5", "5"},
+      {"KP_6", "6"},
+      {"KP_7", "7"},
+      {"KP_8", "8"},
+      {"KP_9", "9"},
+      {"KP_0", "0"}
     }
+    local keysEnum = {}
+    for k, v in ipairs(allowedKeys) do
+        keysEnum[k] = v[1]
+    end
 
     sectorOverview_configOptions = {
-      _version = { default = "1.1", comment = "Config version. Don't touch." },
-      WindowWidth = { default = 320, min = 320, max = 800, format = "floor", comment = "UI window width" },
-      WindowHeight = { default = 400, min = 360, max = 1000, format = "floor", comment = "UI window height" },
-      NotifyAboutEnemies = { default = true, comment = "If true, will notify when enemy player (at war) enters a sector." },
-      ShowNPCNames = { default = true, comment = "If true, sector overview will show unique NPC names in addition to their titles." },
-      ToggleButton = { default = "KP_Minus", comment = "Pressing this button will open/close the overview window." },
-      PrevTabButton = { default = "KP_Divide", comment = "Pressing this button will cycle to the previous tab." },
-      NextTabButton = { default = "KP_Multiply", comment = "Pressing this button will cycle to the next tab." }
+      ["_version"] = {"1.1", comment = "Config version. Don't touch."},
+      ["WindowWidth"] = {320, round = -1, min = 320, max = 800, comment = "UI window width"},
+      ["WindowHeight"] = {400, round = -1, min = 360, max = 1000, comment = "UI window height"},
+      ["NotifyAboutEnemies"] = {true, comment = "If true, will notify when enemy player (at war) enters a sector."},
+      ["ShowNPCNames"] = {true, comment = "If true, sector overview will show unique NPC names in addition to their titles."},
+      ["ToggleButton"] = {"KP_Minus", enum = keysEnum, comment = "Pressing this button will open/close the overview window."},
+      ["PrevTabButton"] = {"KP_Divide", enum = keysEnum, comment = "Pressing this button will cycle to the previous tab."},
+      ["NextTabButton"] = {"KP_Multiply", enum = keysEnum, comment = "Pressing this button will cycle to the next tab."}
     }
     local isModified
     SectorOverviewConfig, isModified = Azimuth.loadConfig("SectorOverview", sectorOverview_configOptions)
-    local isToggleKeyValid = false
-    local isPrevKeyValid = false
-    local isNextKeyValid = false
-    for _, v in ipairs(allowedKeys) do
-        if v[1] == SectorOverviewConfig.ToggleButton then
-            isToggleKeyValid = true
-        end
-        if v[1] == SectorOverviewConfig.PrevTabButton then
-            isPrevKeyValid = true
-        end
-        if v[1] == SectorOverviewConfig.NextTabButton then
-            isNextKeyValid = true
-        end
-        if isToggleKeyValid and isPrevKeyValid and isNextKeyValid then break end
-    end
-    if not isToggleKeyValid then
-        isModified = true
-        SectorOverviewConfig.ToggleButton = "KP_Minus"
-    end
-    if not isPrevKeyValid then
-        isModified = true
-        SectorOverviewConfig.PrevTabButton = "KP_Divide"
-    end
-    if not isNextKeyValid then
-        isModified = true
-        SectorOverviewConfig.NextTabButton = "KP_Multiply"
-    end
     if isModified then
         Azimuth.saveConfig("SectorOverview", SectorOverviewConfig, sectorOverview_configOptions)
     end
@@ -97,25 +76,27 @@ function SectorShipOverview.initialize() -- overridden
 
 Object name color represents relation status (war, ceasefire, neutral, allies)]]%_t
 
-    sectorOverview_tabbedWindow = CustomTabbedWindow(SectorShipOverview, self.window, Rect(vec2(10, 10), size - 10))
+    sectorOverview_tabbedWindow = CustomTabbedWindow(self, self.window, Rect(vec2(10, 10), size - 10))
     sectorOverview_tabbedWindow.onSelectedFunction = "refreshList"
 
     -- stations
     sectorOverview_stationTab = sectorOverview_tabbedWindow:createTab("Station List"%_t, "data/textures/icons/solar-system.png", "Station List"%_t)
     sectorOverview_stationList = sectorOverview_stationTab:createListBoxEx(Rect(sectorOverview_stationTab.size))
-    sectorOverview_stationList.columns = 3
+    sectorOverview_stationList.columns = 4
     sectorOverview_stationList:setColumnWidth(0, 25)
     sectorOverview_stationList:setColumnWidth(1, 25)
-    sectorOverview_stationList:setColumnWidth(2, sectorOverview_stationList.width - 60)
+    sectorOverview_stationList:setColumnWidth(2, sectorOverview_stationList.width - 85)
+    sectorOverview_stationList:setColumnWidth(3, 25)
     sectorOverview_stationList.onSelectFunction = "onEntrySelected"
 
     -- ships
     sectorOverview_shipTab = sectorOverview_tabbedWindow:createTab("Ship List"%_t, "data/textures/icons/ship.png", "Ship List"%_t)
     sectorOverview_shipList = sectorOverview_shipTab:createListBoxEx(Rect(sectorOverview_shipTab.size))
-    sectorOverview_shipList.columns = 3
+    sectorOverview_shipList.columns = 4
     sectorOverview_shipList:setColumnWidth(0, 25)
     sectorOverview_shipList:setColumnWidth(1, 25)
-    sectorOverview_shipList:setColumnWidth(2, sectorOverview_shipList.width - 60)
+    sectorOverview_shipList:setColumnWidth(2, sectorOverview_shipList.width - 85)
+    sectorOverview_shipList:setColumnWidth(3, 25)
     sectorOverview_shipList.onSelectFunction = "onEntrySelected"
 
     -- gates
@@ -156,29 +137,26 @@ Object name color represents relation status (war, ceasefire, neutral, allies)]]
     local label = tab:createLabel(splitter.left, "Open window (numpad)"%_t, 14)
     label:setLeftAligned()
     sectorOverview_toggleBtnComboBox = tab:createValueComboBox(splitter.right, "sectorOverview_onSettingsModified")
-    for _, v in pairs(allowedKeys) do
-        sectorOverview_toggleBtnComboBox:addEntry(v[1], v[2])
-    end
-    sectorOverview_toggleBtnComboBox:setSelectedValueNoCallback(SectorOverviewConfig.ToggleButton)
 
     local rect = lister:placeCenter(vec2(lister.inner.width, 25))
     local splitter = UIVerticalSplitter(rect, 10, 0, 0.65)
     local label = tab:createLabel(splitter.left, "Prev. tab (numpad)"%_t, 14)
     label:setLeftAligned()
     sectorOverview_prevTabBtnComboBox = tab:createValueComboBox(splitter.right, "sectorOverview_onSettingsModified")
-    for _, v in pairs(allowedKeys) do
-        sectorOverview_prevTabBtnComboBox:addEntry(v[1], v[2])
-    end
-    sectorOverview_prevTabBtnComboBox:setSelectedValueNoCallback(SectorOverviewConfig.PrevTabButton)
     
     local rect = lister:placeCenter(vec2(lister.inner.width, 25))
     local splitter = UIVerticalSplitter(rect, 10, 0, 0.65)
     local label = tab:createLabel(splitter.left, "Next tab (numpad)"%_t, 14)
     label:setLeftAligned()
     sectorOverview_nextTabBtnComboBox = tab:createValueComboBox(splitter.right, "sectorOverview_onSettingsModified")
-    for _, v in pairs(allowedKeys) do
+
+    for _, v in ipairs(allowedKeys) do
+        sectorOverview_toggleBtnComboBox:addEntry(v[1], v[2])
+        sectorOverview_prevTabBtnComboBox:addEntry(v[1], v[2])
         sectorOverview_nextTabBtnComboBox:addEntry(v[1], v[2])
     end
+    sectorOverview_toggleBtnComboBox:setSelectedValueNoCallback(SectorOverviewConfig.ToggleButton)
+    sectorOverview_prevTabBtnComboBox:setSelectedValueNoCallback(SectorOverviewConfig.PrevTabButton)
     sectorOverview_nextTabBtnComboBox:setSelectedValueNoCallback(SectorOverviewConfig.NextTabButton)
 
     local rect = lister:placeCenter(vec2(lister.inner.width, 25))
@@ -323,7 +301,7 @@ function SectorShipOverview.sectorOverview_receivePlayerCoord(data)
     for index, coord in pairs(data) do
         sectorOverview_playerCoords[index] = coord
     end
-    SectorShipOverview.sectorOverview_refreshPlayerList()
+    self.sectorOverview_refreshPlayerList()
 end
 
 -- FUNCTIONS --
@@ -333,41 +311,60 @@ function SectorShipOverview.refreshList() -- overridden
     if not craft then return end
 
     local white = ColorRGB(1, 1, 1)
-    local ownerFaction = craft.allianceOwned and Alliance() or Player()
+    local player = Player()
+    local ownerFaction = craft.allianceOwned and Alliance() or player
+    local selectionGroups = sectorOverview_GT135 and self.getSelectionGroupTable(player) or nil
+    local renderer = UIRenderer()
+    local entities = {}
 
-    if sectorOverview_stationTab.isActiveTab then -- stations
-
-        local stations = {}
-        for _, station in ipairs({Sector():getEntitiesByType(EntityType.Station)}) do
-            stations[#stations+1] = { station = station, name = SectorShipOverview.sectorOverview_getEntityName(station) }
-        end
-        table.sort(stations, function(a, b)
-            if a.station.factionIndex == b.station.factionIndex then
+    local sort = function(entities)
+        table.sort(entities, function(a, b)
+            if a.entity.factionIndex == b.entity.factionIndex then
                 if a.name == b.name then
-                    return a.station.id.string < b.station.id.string
+                    return a.entity.id.string < b.entity.id.string
                 end
                 return a.name < b.name
             end
-            return a.station.factionIndex < b.station.factionIndex
+            return (a.entity.factionIndex or 0) < (b.entity.factionIndex or 0)
         end)
+    end
+
+    if sectorOverview_stationTab.isActiveTab then -- stations
+
+        for _, entity in ipairs({Sector():getEntitiesByType(EntityType.Station)}) do
+            entities[#entities+1] = {entity = entity, name = self.sectorOverview_getEntityName(entity)}
+        end
+        for _, entity in ipairs({Sector():getEntitiesByScript("data/scripts/entity/sellobject.lua")}) do
+            entities[#entities+1] = {entity = entity, name = self.sectorOverview_getEntityName(entity, "Claimed Asteroid"%_t), isClaimed = true}
+        end
+        sort(entities)
         local selectedValue = sectorOverview_stationList.selectedValue
         sectorOverview_stationList:clear()
-        for _, pair in ipairs(stations) do
-            local relations = ownerFaction:getRelation(pair.station.factionIndex) -- Relation object
+        for _, pair in ipairs(entities) do
+            local entryColor
+            if sectorOverview_GT135 then
+                entryColor = renderer:getEntityTargeterColor(pair.entity)
+            else
+                entryColor = ownerFaction:getRelation(pair.entity.factionIndex).color -- Relation object
+            end
             local icon = ""
             local secondaryIcon = ""
-            local iconComponent = EntityIcon(pair.station)
+            local iconComponent = EntityIcon(pair.entity)
             if iconComponent then
                 icon = iconComponent.icon
                 secondaryIcon = iconComponent.secondaryIcon
             end
-            if icon == "" then
+            if pair.isClaimed then
+                icon = "data/textures/icons/pixel/credits.png"
+            elseif icon == "" then
                 icon = "data/textures/icons/sectoroverview/pixel/diamond.png"
             end
-            sectorOverview_stationList:addRow(pair.station.id.string)
-            sectorOverview_stationList:setEntry(0, sectorOverview_stationList.rows - 1, icon, false, false, SectorShipOverview.sectorOverview_getOwnershipTypeColor(pair.station))
+            local group = sectorOverview_GT135 and " "..self.getGroupString(selectionGroups, pair.entity.factionIndex, pair.entity.name) or ""
+            sectorOverview_stationList:addRow(pair.entity.id.string)
+            sectorOverview_stationList:setEntry(0, sectorOverview_stationList.rows - 1, icon, false, false, self.sectorOverview_getOwnershipTypeColor(pair.entity))
             sectorOverview_stationList:setEntry(1, sectorOverview_stationList.rows - 1, secondaryIcon, false, false, white)
-            sectorOverview_stationList:setEntry(2, sectorOverview_stationList.rows - 1, pair.name, false, false, relations.color)
+            sectorOverview_stationList:setEntry(2, sectorOverview_stationList.rows - 1, pair.name, false, false, entryColor)
+            sectorOverview_stationList:setEntry(3, sectorOverview_stationList.rows - 1, group, false, false, white)
             sectorOverview_stationList:setEntryType(0, sectorOverview_stationList.rows - 1, 3)
             sectorOverview_stationList:setEntryType(1, sectorOverview_stationList.rows - 1, 3)
         end
@@ -375,39 +372,41 @@ function SectorShipOverview.refreshList() -- overridden
 
     elseif sectorOverview_shipTab.isActiveTab then -- ships
 
-        local ships = {}
-        for _, ship in ipairs({Sector():getEntitiesByComponents(ComponentType.Engine)}) do
-            if ship.isShip or ship.isDrone then
-                ships[#ships+1] = { ship = ship, name = SectorShipOverview.sectorOverview_getEntityName(ship) }
+        for _, entity in ipairs({Sector():getEntitiesByComponents(ComponentType.Engine)}) do
+            if entity.isShip or entity.isDrone then
+                entities[#entities+1] = {entity = entity, name = self.sectorOverview_getEntityName(entity)}
             end
         end
-        table.sort(ships, function(a, b)
-            if a.ship.factionIndex == b.ship.factionIndex then
-                if a.name == b.name then
-                    return a.ship.id.string < b.ship.id.string
-                end
-                return a.name < b.name
-            end
-            return a.ship.factionIndex < b.ship.factionIndex
-        end)
+        sort(entities)
         local selectedValue = sectorOverview_shipList.selectedValue
         sectorOverview_shipList:clear()
-        for _, pair in ipairs(ships) do
-            local relations = ownerFaction:getRelation(pair.ship.factionIndex) -- Relation object
+        for _, pair in ipairs(entities) do
+            local entryColor
+            if sectorOverview_GT135 then
+                entryColor = renderer:getEntityTargeterColor(pair.entity)
+            else
+                entryColor = ownerFaction:getRelation(pair.entity.factionIndex).color -- Relation object
+            end
             local icon = ""
             local secondaryIcon = ""
-            local iconComponent = EntityIcon(pair.ship)
+            local iconComponent = EntityIcon(pair.entity)
             if iconComponent then
-                icon = iconComponent.icon
+                if sectorOverview_GT135 and player.craftIndex == pair.entity.id then
+                    icon = "data/textures/icons/pixel/player.png"
+                else
+                    icon = iconComponent.icon
+                end
                 secondaryIcon = iconComponent.secondaryIcon
             end
             if icon == "" then
                 icon = "data/textures/icons/sectoroverview/pixel/diamond.png"
             end
-            sectorOverview_shipList:addRow(pair.ship.id.string)
-            sectorOverview_shipList:setEntry(0, sectorOverview_shipList.rows - 1, icon, false, false, SectorShipOverview.sectorOverview_getOwnershipTypeColor(pair.ship))
+            local group = sectorOverview_GT135 and " "..self.getGroupString(selectionGroups, pair.entity.factionIndex, pair.entity.name) or ""
+            sectorOverview_shipList:addRow(pair.entity.id.string)
+            sectorOverview_shipList:setEntry(0, sectorOverview_shipList.rows - 1, icon, false, false, self.sectorOverview_getOwnershipTypeColor(pair.entity))
             sectorOverview_shipList:setEntry(1, sectorOverview_shipList.rows - 1, secondaryIcon, false, false, white)
-            sectorOverview_shipList:setEntry(2, sectorOverview_shipList.rows - 1, pair.name, false, false, relations.color)
+            sectorOverview_shipList:setEntry(2, sectorOverview_shipList.rows - 1, pair.name, false, false, entryColor)
+            sectorOverview_shipList:setEntry(3, sectorOverview_shipList.rows - 1, group, false, false, white)
             sectorOverview_shipList:setEntryType(0, sectorOverview_shipList.rows - 1, 3)
             sectorOverview_shipList:setEntryType(1, sectorOverview_shipList.rows - 1, 3)
         end
@@ -415,34 +414,76 @@ function SectorShipOverview.refreshList() -- overridden
 
     elseif sectorOverview_gateTab.isActiveTab then -- gates
 
+        for _, entity in ipairs({Sector():getEntitiesByComponents(ComponentType.WormHole)}) do
+            local isGate = entity:hasComponent(ComponentType.Plan)
+            entities[#entities+1] = {
+              entity = entity,
+              name = isGate and self.sectorOverview_getEntityName(entity) or "Wormhole"%_t,
+              isGate = isGate
+            }
+        end
+        sort(entities)
         local selectedValue = sectorOverview_gateList.selectedValue
         sectorOverview_gateList:clear()
-        for _, entity in ipairs({Sector():getEntitiesByComponent(ComponentType.WormHole)}) do
-            local name = ""
+        for _, pair in ipairs(entities) do
             local icon = ""
             local ownershipColor = white
-            local relationsColor = white
-            if entity:hasComponent(ComponentType.Plan) then
-                name = SectorShipOverview.sectorOverview_getEntityName(entity)
-                local relations = ownerFaction:getRelation(entity.factionIndex) -- Relation object
-                ownershipColor = SectorShipOverview.sectorOverview_getOwnershipTypeColor(entity)
-                relationsColor = relations.color
-                local iconComponent = EntityIcon(entity)
+            local entryColor = white
+            if pair.isGate then
+                ownershipColor = self.sectorOverview_getOwnershipTypeColor(pair.entity)
+                if sectorOverview_GT135 then
+                    entryColor = renderer:getEntityTargeterColor(pair.entity)
+                else
+                    entryColor = ownerFaction:getRelation(pair.entity.factionIndex).color
+                end
+                local iconComponent = EntityIcon(pair.entity)
                 if iconComponent then
                     icon = iconComponent.icon
                 end
             else
-                name = "Wormhole"%_t
                 icon = "data/textures/icons/sectoroverview/pixel/spiral.png"
             end
-            sectorOverview_gateList:addRow(entity.id.string)
+            sectorOverview_gateList:addRow(pair.entity.id.string)
             sectorOverview_gateList:setEntry(0, sectorOverview_gateList.rows - 1, icon, false, false, ownershipColor)
-            sectorOverview_gateList:setEntry(1, sectorOverview_gateList.rows - 1, name, false, false, relationsColor)
+            sectorOverview_gateList:setEntry(1, sectorOverview_gateList.rows - 1, pair.name, false, false, entryColor)
             sectorOverview_gateList:setEntryType(0, sectorOverview_gateList.rows - 1, 3)
         end
         sectorOverview_gateList:selectValueNoCallback(selectedValue)
 
     end
+end
+
+if sectorOverview_GT135 then
+
+local doubleClick = {}
+function SectorShipOverview.onEntrySelected(index, value) -- overridden
+    if not value or value == "" then return end
+
+    local time = appTime()
+    if doubleClick.value ~= value then
+        doubleClick.value = value
+        doubleClick.time = time
+    else
+        if time - doubleClick.time < 0.5 then
+            if Player().state == PlayerStateType.Strategy then
+                StrategyState():centerCameraOnSelection()
+            end
+        else
+            doubleClick.time = time
+        end
+    end
+
+    local player = Player()
+
+    if Keyboard().controlPressed then
+        StrategyState():toggleSelect(value)
+        return
+    end
+
+    StrategyState():clearSelection()
+    player.selectedObject = Entity(value)
+end
+
 end
 
 function SectorShipOverview.sectorOverview_toggleWindow()
@@ -470,18 +511,22 @@ function SectorShipOverview.sectorOverview_getOwnershipTypeColor(entity)
     return ColorRGB(1, 1, 1)
 end
 
-function SectorShipOverview.sectorOverview_getEntityName(entity)
+function SectorShipOverview.sectorOverview_getEntityName(entity, custom)
     local entryName = ""
-    if entity.translatedTitle and entity.translatedTitle ~= "" then
-        entryName = entity.translatedTitle
-    elseif entity.title and entity.title ~= "" then
-        entryName = (entity.title % entity:getTitleArguments())
-    end
-    if entity.name and (entryName == "" or not entity.aiOwned or SectorOverviewConfig.ShowNPCNames) then
-        if entryName == "" then
-            entryName = entity.name
-        else
-            entryName = entryName.." - "..entity.name
+    if custom then
+        entryName = custom
+    else
+        if entity.translatedTitle and entity.translatedTitle ~= "" then
+            entryName = entity.translatedTitle
+        elseif entity.title and entity.title ~= "" then
+            entryName = (entity.title % entity:getTitleArguments())
+        end
+        if entity.name and (entryName == "" or not entity.aiOwned or SectorOverviewConfig.ShowNPCNames) then
+            if entryName == "" then
+                entryName = entity.name
+            else
+                entryName = entryName.." - "..entity.name
+            end
         end
     end
     if entryName == "" and not entity.name then
@@ -556,7 +601,7 @@ function SectorShipOverview.sectorOverview_onPlayerTabSelected(tab)
         end
     end
 
-    SectorShipOverview.sectorOverview_refreshPlayerList(true)
+    self.sectorOverview_refreshPlayerList(true)
 end
 
 function SectorShipOverview.sectorOverview_onShowPlayerPressed()
@@ -576,7 +621,7 @@ function SectorShipOverview.sectorOverview_onAddPlayerTracking()
     local name = sectorOverview_playerCombo.selectedEntry
     if name ~= "" and not sectorOverview_playerAddedList[name] then
         sectorOverview_playerAddedList[name] = sectorOverview_playerCombo.selectedValue
-        SectorShipOverview.sectorOverview_refreshPlayerList()
+        self.sectorOverview_refreshPlayerList()
         invokeServerFunction("sectorOverview_sendPlayersCoord", sectorOverview_playerCombo.selectedValue)
     end
 end
@@ -588,7 +633,7 @@ function SectorShipOverview.sectorOverview_onRemovePlayerTracking()
         if index then
             sectorOverview_playerAddedList[name] = nil
             sectorOverview_playerCoords[index] = nil
-            SectorShipOverview.sectorOverview_refreshPlayerList()
+            self.sectorOverview_refreshPlayerList()
         end
     end
 end
@@ -632,8 +677,8 @@ else -- onServer
 
 function SectorShipOverview.initialize()
     local configOptions = {
-      _version = { default = "1.1", comment = "Config version. Don't touch." },
-      AllowPlayerTracking = { default = true, comment = "If false, server will not reveal players coordinates (useful for PvP servers)." }
+      ["_version"] = {"1.1", comment = "Config version. Don't touch."},
+      ["AllowPlayerTracking"] = {true, comment = "If false, server will not reveal players coordinates (useful for PvP servers)."}
     }
     local isModified
     SectorOverviewConfig, isModified = Azimuth.loadConfig("SectorOverview", configOptions)
@@ -653,7 +698,7 @@ callable(SectorShipOverview, "sectorOverview_sendServerConfig")
 
 function SectorShipOverview.sectorOverview_setNotifyAboutEnemies(value)
     sectorOverview_notifyAboutEnemies = value
-    SectorShipOverview.sectorOverview_onSectorEntered()
+    self.sectorOverview_onSectorEntered()
 end
 callable(SectorShipOverview, "sectorOverview_setNotifyAboutEnemies")
 
