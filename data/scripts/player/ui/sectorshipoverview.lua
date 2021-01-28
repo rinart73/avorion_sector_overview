@@ -475,12 +475,13 @@ function SectorShipOverview.onEntrySelected(index, value) -- overridden
 
     local player = Player()
 
-    if Keyboard().controlPressed then
-        StrategyState():toggleSelect(value)
-        return
+    if player.state == PlayerStateType.Strategy then
+        if Keyboard().controlPressed then
+            StrategyState():toggleSelect(value)
+            return
+        end
+        StrategyState():clearSelection()
     end
-
-    StrategyState():clearSelection()
     player.selectedObject = Entity(value)
 end
 
