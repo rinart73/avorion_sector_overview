@@ -13,6 +13,9 @@ meta =
     -- Title of your mod that will be displayed to players
     title = "Sector Overview",
 
+    -- Type of your mod, either "mod" or "factionpack"
+    type = "mod",
+
     -- Description of your mod that will be displayed to players
     description = "Shows lists of stations and gates in a current sector. By clicking their names you'll target them. Also allows to track other player's coordinates.",
 
@@ -20,8 +23,10 @@ meta =
     authors = {"Rinart73", "shulrak"},
 
     -- Version of your mod, should be in format 1.0.0 (major.minor.patch) or 1.0 (major.minor)
-    -- This will be used to check for unmet dependencies or incompatibilities
-    version = "1.5.2",
+    -- This will be used to check for unmet dependencies or incompatibilities, and to check compatibility between clients and dedicated servers with mods.
+    -- If a client with an unmatching major or minor mod version wants to log into a server, login is prohibited.
+    -- Unmatching patch version still allows logging into a server. This works in both ways (server or client higher or lower version).
+    version = "1.5.3",
 
     -- If your mod requires dependencies, enter them here. The game will check that all dependencies given here are met.
     -- Possible attributes:
@@ -40,8 +45,8 @@ meta =
     -- },
     dependencies = {
         {id = "1722652757", min = "1.5"},
-        {id = "Avorion", min = "1.0", max = "1.*"},
-        {id = "2005602096", max = "10.0", incompatible = true}
+        {id = "2005602096", max = "10.0", incompatible = true},
+        {id = "Avorion", min = "1.0", max = "1.*"}
     },
 
     -- Set to true if the mod only has to run on the server. Clients will get notified that the mod is running on the server, but they won't download it to themselves

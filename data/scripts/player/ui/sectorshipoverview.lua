@@ -349,10 +349,12 @@ function SectorShipOverview.refreshList() -- overridden
             end
             local icon = ""
             local secondaryIcon = ""
+            local secondaryIconColor = white
             local iconComponent = EntityIcon(pair.entity)
             if iconComponent then
                 icon = iconComponent.icon
                 secondaryIcon = iconComponent.secondaryIcon
+                secondaryIconColor = iconComponent.secondaryIconColor
             end
             if pair.isClaimed then
                 icon = "data/textures/icons/pixel/credits.png"
@@ -362,7 +364,7 @@ function SectorShipOverview.refreshList() -- overridden
             local group = sectorOverview_GT135 and " "..self.getGroupString(selectionGroups, pair.entity.factionIndex, pair.entity.name) or ""
             sectorOverview_stationList:addRow(pair.entity.id.string)
             sectorOverview_stationList:setEntry(0, sectorOverview_stationList.rows - 1, icon, false, false, self.sectorOverview_getOwnershipTypeColor(pair.entity))
-            sectorOverview_stationList:setEntry(1, sectorOverview_stationList.rows - 1, secondaryIcon, false, false, white)
+            sectorOverview_stationList:setEntry(1, sectorOverview_stationList.rows - 1, secondaryIcon, false, false, secondaryIconColor)
             sectorOverview_stationList:setEntry(2, sectorOverview_stationList.rows - 1, pair.name, false, false, entryColor)
             sectorOverview_stationList:setEntry(3, sectorOverview_stationList.rows - 1, group, false, false, white)
             sectorOverview_stationList:setEntryType(0, sectorOverview_stationList.rows - 1, 3)
@@ -389,6 +391,7 @@ function SectorShipOverview.refreshList() -- overridden
             end
             local icon = ""
             local secondaryIcon = ""
+            local secondaryIconColor = white
             local iconComponent = EntityIcon(pair.entity)
             if iconComponent then
                 if sectorOverview_GT135 and player.craftIndex == pair.entity.id then
@@ -397,6 +400,7 @@ function SectorShipOverview.refreshList() -- overridden
                     icon = iconComponent.icon
                 end
                 secondaryIcon = iconComponent.secondaryIcon
+                secondaryIconColor = iconComponent.secondaryIconColor
             end
             if icon == "" then
                 icon = "data/textures/icons/sectoroverview/pixel/diamond.png"
@@ -404,7 +408,7 @@ function SectorShipOverview.refreshList() -- overridden
             local group = sectorOverview_GT135 and " "..self.getGroupString(selectionGroups, pair.entity.factionIndex, pair.entity.name) or ""
             sectorOverview_shipList:addRow(pair.entity.id.string)
             sectorOverview_shipList:setEntry(0, sectorOverview_shipList.rows - 1, icon, false, false, self.sectorOverview_getOwnershipTypeColor(pair.entity))
-            sectorOverview_shipList:setEntry(1, sectorOverview_shipList.rows - 1, secondaryIcon, false, false, white)
+            sectorOverview_shipList:setEntry(1, sectorOverview_shipList.rows - 1, secondaryIcon, false, false, secondaryIconColor)
             sectorOverview_shipList:setEntry(2, sectorOverview_shipList.rows - 1, pair.name, false, false, entryColor)
             sectorOverview_shipList:setEntry(3, sectorOverview_shipList.rows - 1, group, false, false, white)
             sectorOverview_shipList:setEntryType(0, sectorOverview_shipList.rows - 1, 3)
